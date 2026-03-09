@@ -46,7 +46,7 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
           )}
           {discount && (
-            <span className="absolute top-2 left-2 bg-ig-red text-white text-xs font-bold px-2 py-1 rounded">
+            <span className="absolute top-2 left-2 bg-ig-green-light text-ig-green text-xs font-bold px-2 py-1 rounded">
               {`-${discount}%`}
             </span>
           )}
@@ -62,7 +62,9 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Vendor */}
           {product.vendor_name && (
             <div className="flex items-center gap-1 mb-1">
-              <span className="text-[11px] text-muted-foreground truncate">{product.vendor_name}</span>
+              <span className="text-[11px] text-muted-foreground truncate">
+                {product.vendor_name}
+              </span>
               {product.vendor_verified && (
                 <BadgeCheck className="h-3.5 w-3.5 text-ig-green shrink-0" />
               )}
@@ -81,17 +83,23 @@ export function ProductCard({ product }: { product: Product }) {
                 <Star
                   key={i}
                   className={`h-3 w-3 ${
-                    i < Math.floor(product.rating) ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"
+                    i < Math.floor(product.rating)
+                      ? "text-amber-400 fill-amber-400"
+                      : "text-muted-foreground/30"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-[10px] text-muted-foreground">({product.total_reviews})</span>
+            <span className="text-[10px] text-muted-foreground">
+              ({product.total_reviews})
+            </span>
           </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-base font-bold text-ig-black">{formatPrice(product.price, product.currency)}</span>
+            <span className="text-base font-bold text-ig-black">
+              {formatPrice(product.price, product.currency)}
+            </span>
             {product.compare_price && (
               <span className="text-xs text-muted-foreground line-through">
                 {formatPrice(product.compare_price, product.currency)}
