@@ -14,7 +14,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, ShoppingCart, User, Menu, X, ChevronDown, LogOut, Package, Heart } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  LogOut,
+  Package,
+  Heart,
+} from "lucide-react";
 
 const CATEGORIES = [
   { name: "Running", slug: "running" },
@@ -40,15 +50,25 @@ export function StoreHeader() {
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
           <p>Free delivery on orders above KES 5,000</p>
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/vendor" className="hover:text-ig-green transition-colors">Sell on ItenGear</Link>
-            <Link href="/help" className="hover:text-ig-green transition-colors">Help</Link>
+            <Link
+              href="/vendor"
+              className="hover:text-ig-green transition-colors"
+            >
+              Sell on ItenGear
+            </Link>
+            <Link
+              href="/help"
+              className="hover:text-ig-green transition-colors"
+            >
+              Help
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="bg-white border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-3 border-b border-ig-green-light">
           <div className="flex items-center gap-4">
             {/* Mobile menu toggle */}
             <button
@@ -56,7 +76,11 @@ export function StoreHeader() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
 
             {/* Logo */}
@@ -105,7 +129,11 @@ export function StoreHeader() {
               {/* Account */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-foreground">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-foreground"
+                  >
                     <User className="h-5 w-5" />
                     <span className="hidden md:inline text-sm">
                       {user ? user.firstName : "Account"}
@@ -113,7 +141,10 @@ export function StoreHeader() {
                     <ChevronDown className="h-3 w-3 hidden md:block" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white text-foreground">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-white text-foreground"
+                >
                   {user ? (
                     <>
                       <DropdownMenuItem asChild>
@@ -123,19 +154,28 @@ export function StoreHeader() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/account/orders" className="gap-2 cursor-pointer">
+                        <Link
+                          href="/account/orders"
+                          className="gap-2 cursor-pointer"
+                        >
                           <Package className="h-4 w-4" />
                           Orders
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/account/wishlist" className="gap-2 cursor-pointer">
+                        <Link
+                          href="/account/wishlist"
+                          className="gap-2 cursor-pointer"
+                        >
                           <Heart className="h-4 w-4" />
                           Wishlist
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer text-ig-red">
+                      <DropdownMenuItem
+                        onClick={logout}
+                        className="gap-2 cursor-pointer text-ig-red"
+                      >
                         <LogOut className="h-4 w-4" />
                         Sign Out
                       </DropdownMenuItem>
@@ -143,10 +183,17 @@ export function StoreHeader() {
                   ) : (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link href="/auth/login" className="cursor-pointer font-medium">Sign In</Link>
+                        <Link
+                          href="/auth/login"
+                          className="cursor-pointer font-medium"
+                        >
+                          Sign In
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/auth/register" className="cursor-pointer">Create Account</Link>
+                        <Link href="/auth/register" className="cursor-pointer">
+                          Create Account
+                        </Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -155,7 +202,11 @@ export function StoreHeader() {
 
               {/* Cart */}
               <Link href="/cart">
-                <Button variant="ghost" size="sm" className="gap-1.5 relative text-foreground">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 relative text-foreground"
+                >
                   <ShoppingCart className="h-5 w-5" />
                   <span className="hidden md:inline text-sm">Cart</span>
                   {count > 0 && (
@@ -194,14 +245,14 @@ export function StoreHeader() {
         </div>
 
         {/* Category nav */}
-        <nav className="hidden md:block bg-ig-green text-white">
+        <nav className="hidden md:block text-ig-green py-1">
           <div className="max-w-7xl mx-auto px-4">
-            <ul className="flex items-center gap-0 overflow-x-auto">
+            <ul className="flex items-center gap-3 overflow-x-auto">
               {CATEGORIES.map((cat) => (
                 <li key={cat.slug}>
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className="block px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap"
+                    className="block px-4 py-2 text-sm font-medium rounded-md bg-ig-green-light text-ig-green hover:bg-white/10 transition-colors whitespace-nowrap"
                   >
                     {cat.name}
                   </Link>
@@ -216,7 +267,9 @@ export function StoreHeader() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-border shadow-lg">
           <nav className="max-w-7xl mx-auto px-4 py-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Categories</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Categories
+            </p>
             <ul className="space-y-1">
               {CATEGORIES.map((cat) => (
                 <li key={cat.slug}>

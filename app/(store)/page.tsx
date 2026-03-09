@@ -110,16 +110,16 @@ export default function HomePage() {
           <div className="flex gap-4">
             {/* Left Column - Categories (hidden on mobile) */}
             <div className="hidden lg:block w-56 shrink-0">
-              <div className="bg-white rounded-lg border border-border overflow-hidden h-full">
+              <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-green text-white px-4 py-3 font-semibold text-sm">
                   Categories
                 </div>
-                <nav className="py-2">
+                <nav className="py-2 px-4">
                   {MOCK_CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
                       href={`/products?category=${cat.slug}`}
-                      className="flex items-center px-4 py-2.5 text-sm text-foreground hover:bg-ig-green-light hover:text-ig-green transition-colors"
+                      className="flex items-center px-4 py-2.5 text-sm text-foreground rounded-md hover:bg-ig-green-light hover:text-ig-green transition-colors"
                     >
                       <span className="w-5 h-5  flex items-center justify-center mr-3">
                         {/* {cat.name.charAt(0)} */}
@@ -214,7 +214,7 @@ export default function HomePage() {
 
             {/* Right Column - Brands (hidden on mobile) */}
             <div className="hidden lg:block w-44 shrink-0">
-              <div className="bg-white rounded-lg border border-border overflow-hidden h-full">
+              <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-black text-white px-4 py-3 font-semibold text-sm">
                   Top Brands
                 </div>
@@ -223,7 +223,7 @@ export default function HomePage() {
                     <Link
                       key={brand.id}
                       href={`/products?brand=${brand.slug}`}
-                      className="flex items-center justify-center px-1 rounded-sm border border-ig-green-light hover:border-none hover:bg-ig-green-light transition-all group"
+                      className="flex items-center justify-center px-1 shadow-sm shadow-ig-green-light rounded-sm hover:bg-ig-green-light transition-all group"
                     >
                       {/* <span className="text-sm font-bold text-muted-foreground group-hover:text-ig-green transition-colors">
                         {brand.name}
