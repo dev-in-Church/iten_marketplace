@@ -9,15 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
+const BRANDS = [
+  "Nike",
+  "Adidas",
+  "Puma",
+  "Under Armour",
+  "Asics",
+  "Reebok",
+  "Wilson",
+  "Speedo",
+  "Giant",
+  "PowerBlock",
+];
+
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category") || "";
   const searchParam = searchParams.get("search") || "";
+  const brandParam = searchParams.get("brand") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParam);
   const [selectedCategory, setSelectedCategory] = useState(categoryParam);
+  const [selectedBrand, setSelectedBrand] = useState(brandParam);
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -27,6 +42,7 @@ export default function ProductsPage() {
       try {
         const params: Record<string, string> = { limit: "50" };
         if (selectedCategory) params.category = selectedCategory;
+        if (selectedBrand) params.brand = selectedBrand;
         if (searchQuery) params.search = searchQuery;
         if (sortBy) params.sort = sortBy;
         const data = await api.get<{ products: Product[] }>(
@@ -41,6 +57,10 @@ export default function ProductsPage() {
             filtered = filtered.filter(
               (p) => p.category_slug === selectedCategory,
             );
+          if (selectedBrand)
+            filtered = filtered.filter(
+              (p) => p.brand?.toLowerCase() === selectedBrand.toLowerCase(),
+            );
           if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(
@@ -49,6 +69,14 @@ export default function ProductsPage() {
                 p.brand?.toLowerCase().includes(q),
             );
           }
+          if (sortBy === "price_asc")
+            filtered.sort((a, b) => a.price - b.price);
+          else if (sortBy === "price_desc")
+            filtered.sort((a, b) => b.price - a.price);
+          else if (sortBy === "popular")
+            filtered.sort((a, b) => b.total_sold - a.total_sold);
+          else if (sortBy === "rating")
+            filtered.sort((a, b) => b.rating - a.rating);
           setProducts(filtered);
         }
       } catch {
@@ -56,6 +84,10 @@ export default function ProductsPage() {
         if (selectedCategory)
           filtered = filtered.filter(
             (p) => p.category_slug === selectedCategory,
+          );
+        if (selectedBrand)
+          filtered = filtered.filter(
+            (p) => p.brand?.toLowerCase() === selectedBrand.toLowerCase(),
           );
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
@@ -66,14 +98,19 @@ export default function ProductsPage() {
           );
         }
         if (sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
-        if (sortBy === "price_desc") filtered.sort((a, b) => b.price - a.price);
+        else if (sortBy === "price_desc")
+          filtered.sort((a, b) => b.price - a.price);
+        else if (sortBy === "popular")
+          filtered.sort((a, b) => b.total_sold - a.total_sold);
+        else if (sortBy === "rating")
+          filtered.sort((a, b) => b.rating - a.rating);
         setProducts(filtered);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [selectedCategory, selectedBrand, searchQuery, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -83,22 +120,32 @@ export default function ProductsPage() {
           Home
         </a>
         <span>/</span>
-        <span className="text-foreground font-medium">
-          {selectedCategory
-            ? MOCK_CATEGORIES.find((c) => c.slug === selectedCategory)?.name ||
-              "Products"
-            : "All Products"}
-        </span>
+        <a href="/products" className="hover:text-ig-green">
+          Products
+        </a>
+        {(selectedCategory || selectedBrand) && (
+          <>
+            <span>/</span>
+            <span className="text-foreground font-medium">
+              {selectedBrand ||
+                MOCK_CATEGORIES.find((c) => c.slug === selectedCategory)
+                  ?.name ||
+                "All"}
+            </span>
+          </>
+        )}
       </nav>
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground">
-          {selectedCategory
-            ? MOCK_CATEGORIES.find((c) => c.slug === selectedCategory)?.name ||
-              "Products"
-            : searchQuery
-              ? `Results for "${searchQuery}"`
-              : "All Products"}
+          {selectedBrand
+            ? `${selectedBrand} Products`
+            : selectedCategory
+              ? MOCK_CATEGORIES.find((c) => c.slug === selectedCategory)
+                  ?.name || "Products"
+              : searchQuery
+                ? `Results for "${searchQuery}"`
+                : "All Products"}
         </h1>
         <Button
           variant="outline"
@@ -174,6 +221,39 @@ export default function ProductsPage() {
             </ul>
           </div>
 
+          {/* Brands */}
+          <div className="mb-6">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+              Brand
+            </label>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  onClick={() => {
+                    setSelectedBrand("");
+                    setShowFilters(false);
+                  }}
+                  className={`block w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${!selectedBrand ? "bg-ig-green text-white font-medium" : "text-foreground hover:bg-secondary"}`}
+                >
+                  All Brands
+                </button>
+              </li>
+              {BRANDS.map((brand) => (
+                <li key={brand}>
+                  <button
+                    onClick={() => {
+                      setSelectedBrand(brand);
+                      setShowFilters(false);
+                    }}
+                    className={`block w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${selectedBrand.toLowerCase() === brand.toLowerCase() ? "bg-ig-green text-white font-medium" : "text-foreground hover:bg-secondary"}`}
+                  >
+                    {brand}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Sort */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -219,6 +299,7 @@ export default function ProductsPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("");
+                  setSelectedBrand("");
                 }}
               >
                 Clear Filters

@@ -222,7 +222,7 @@ export default function HomePage() {
                   {FEATURED_BRANDS.map((brand) => (
                     <Link
                       key={brand.id}
-                      href={`/products?brand=${brand.slug}`}
+                      href={`/products?brand=${encodeURIComponent(brand.name)}`}
                       className="flex items-center justify-center px-1 shadow-sm shadow-ig-green-light rounded-sm hover:bg-ig-green-light transition-all group"
                     >
                       {/* <span className="text-sm font-bold text-muted-foreground group-hover:text-ig-green transition-colors">
@@ -489,7 +489,7 @@ export default function HomePage() {
             {FEATURED_BRANDS.map((brand) => (
               <Link
                 key={brand.id}
-                href={`/products?brand=${brand.slug}`}
+                href={`/products?brand=${encodeURIComponent(brand.name)}`}
                 className="px-4 py-2 border border-border rounded-full text-sm font-medium text-muted-foreground hover:border-ig-green hover:text-ig-green transition-colors"
               >
                 {brand.name}

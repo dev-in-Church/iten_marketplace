@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
@@ -33,9 +32,12 @@ import {
   Tent,
   Building,
   Shield,
+  AlertCircle,
+  RefreshCw,
+  X,
 } from "lucide-react";
 
-type Step = "details" | "payment" | "processing" | "success";
+type Step = "details" | "payment" | "processing" | "failed" | "success";
 
 function getAreaIcon(type: DeliveryArea["type"]) {
   switch (type) {
@@ -53,7 +55,6 @@ function getAreaIcon(type: DeliveryArea["type"]) {
 }
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
 
@@ -72,7 +73,13 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(
+    null,
+  );
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  const [pollingCount, setPollingCount] = useState(0);
 
   const selectedDeliveryArea = useMemo(
     () => ITEN_DELIVERY_AREAS.find((a) => a.id === selectedArea),
@@ -87,7 +94,6 @@ export default function CheckoutPage() {
 
   const total = subtotal + deliveryFee;
 
-  // Group delivery areas by type
   const groupedAreas = useMemo(() => {
     const camps = ITEN_DELIVERY_AREAS.filter((a) => a.type === "camp");
     const estates = ITEN_DELIVERY_AREAS.filter((a) => a.type === "estate");
@@ -95,6 +101,46 @@ export default function CheckoutPage() {
     const pickups = ITEN_DELIVERY_AREAS.filter((a) => a.type === "pickup");
     return { camps, estates, centers, pickups };
   }, []);
+
+  // Poll for M-Pesa payment status
+  const pollPaymentStatus = useCallback(async () => {
+    if (!checkoutRequestId || paymentStatus !== "pending") return;
+
+    try {
+      const result = await api.get<{ status: string; orderStatus?: string }>(
+        `/api/mpesa/status/${checkoutRequestId}`,
+      );
+
+      if (result.status === "completed") {
+        setPaymentStatus("completed");
+        clearCart();
+        setStep("success");
+        setLoading(false);
+      } else if (result.status === "failed" || result.status === "cancelled") {
+        setPaymentStatus("failed");
+        setStep("failed");
+        setLoading(false);
+      } else {
+        // Still pending, continue polling (max 60 seconds / 12 polls)
+        setPollingCount((prev) => prev + 1);
+      }
+    } catch {
+      // Continue polling on error
+      setPollingCount((prev) => prev + 1);
+    }
+  }, [checkoutRequestId, paymentStatus, clearCart]);
+
+  useEffect(() => {
+    if (
+      step === "processing" &&
+      paymentMethod === "mpesa" &&
+      checkoutRequestId &&
+      pollingCount < 12
+    ) {
+      const timer = setTimeout(pollPaymentStatus, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [step, paymentMethod, checkoutRequestId, pollingCount, pollPaymentStatus]);
 
   if (!user) {
     return (
@@ -114,7 +160,12 @@ export default function CheckoutPage() {
     );
   }
 
-  if (items.length === 0 && step !== "success") {
+  if (
+    items.length === 0 &&
+    step !== "success" &&
+    step !== "failed" &&
+    step !== "processing"
+  ) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
         <ShoppingBag className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
@@ -149,7 +200,6 @@ export default function CheckoutPage() {
   const handlePayment = async () => {
     setError("");
 
-    // Validate based on payment method
     if (paymentMethod === "mpesa") {
       if (!mpesaPhone || mpesaPhone.length < 10) {
         setError("Please enter a valid M-Pesa phone number");
@@ -175,7 +225,8 @@ export default function CheckoutPage() {
     }
 
     setLoading(true);
-    setStep("processing");
+    setPollingCount(0);
+    setPaymentStatus("pending");
 
     try {
       const shippingAddress =
@@ -183,53 +234,85 @@ export default function CheckoutPage() {
           ? `Pickup: ${selectedDeliveryArea.name} - ${selectedDeliveryArea.description}`
           : `${selectedDeliveryArea?.name}${additionalAddress ? `, ${additionalAddress}` : ""}`;
 
-      // Create order
-      const orderData = await api.post<{ order: { id: string } }>(
-        "/api/orders",
-        {
-          shippingAddress,
-          shippingPhone: phone,
-          paymentMethod,
-          deliveryAreaId: selectedArea,
-        },
-      );
+      // Step 1: Create order
+      const orderData = await api.post<{
+        order: { id: string; order_number: string };
+      }>("/api/orders", {
+        shippingAddress,
+        shippingPhone: phone,
+        paymentMethod,
+        deliveryAreaId: selectedArea,
+      });
 
       setOrderId(orderData.order.id);
+      setOrderNumber(orderData.order.order_number);
+      setStep("processing");
 
       if (paymentMethod === "mpesa") {
-        // Initiate M-Pesa payment
-        await api.post("/api/mpesa/order", {
-          orderId: orderData.order.id,
-          phoneNumber: mpesaPhone,
-        });
+        // Step 2: Initiate M-Pesa STK Push
+        const mpesaData = await api.post<{ checkoutRequestId: string }>(
+          "/api/mpesa/order-payment",
+          {
+            orderId: orderData.order.id,
+            phone: mpesaPhone,
+          },
+        );
+
+        setCheckoutRequestId(mpesaData.checkoutRequestId);
+        // Polling will start via useEffect
       } else if (paymentMethod === "card") {
-        // Process card payment (simulated)
+        // Process card payment
         await api.post("/api/payments/card", {
           orderId: orderData.order.id,
           cardLast4: cardDetails.number.slice(-4),
         });
+        clearCart();
+        setStep("success");
+        setLoading(false);
+      } else if (paymentMethod === "cod") {
+        // COD - order already confirmed
+        clearCart();
+        setStep("success");
+        setLoading(false);
       }
-      // COD doesn't need payment processing
-
-      setTimeout(
-        () => {
-          clearCart();
-          setStep("success");
-          setLoading(false);
-        },
-        paymentMethod === "cod" ? 1000 : 3000,
-      );
     } catch (err: unknown) {
       setError(
         err instanceof Error
           ? err.message
-          : "Payment failed. Please try again.",
+          : "Failed to process order. Please try again.",
       );
       setStep("payment");
       setLoading(false);
     }
   };
 
+  const handleRetryPayment = async () => {
+    if (!orderId) return;
+
+    setError("");
+    setLoading(true);
+    setPollingCount(0);
+    setPaymentStatus("pending");
+    setStep("processing");
+
+    try {
+      const mpesaData = await api.post<{ checkoutRequestId: string }>(
+        "/api/mpesa/retry-payment",
+        {
+          orderId,
+          phone: mpesaPhone,
+        },
+      );
+
+      setCheckoutRequestId(mpesaData.checkoutRequestId);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to retry payment.");
+      setStep("failed");
+      setLoading(false);
+    }
+  };
+
+  // Success screen
   if (step === "success") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -240,12 +323,10 @@ export default function CheckoutPage() {
           Order Placed Successfully!
         </h1>
         <p className="text-muted-foreground mb-2">
-          {orderId ? `Order #${orderId.slice(0, 8)}...` : "Your order"} has been
-          confirmed.
+          Order #{orderNumber || orderId?.slice(0, 8)} has been confirmed.
         </p>
         <p className="text-sm text-muted-foreground mb-6">
-          {paymentMethod === "mpesa" &&
-            "You will receive an M-Pesa confirmation shortly."}
+          {paymentMethod === "mpesa" && "Payment received via M-Pesa."}
           {paymentMethod === "card" &&
             "Your card has been charged successfully."}
           {paymentMethod === "cod" &&
@@ -267,6 +348,64 @@ export default function CheckoutPage() {
     );
   }
 
+  // Payment failed screen with retry option
+  if (step === "failed") {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <div className="w-20 h-20 rounded-full bg-ig-red-light mx-auto mb-6 flex items-center justify-center">
+          <X className="h-10 w-10 text-ig-red" />
+        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          Payment Failed
+        </h1>
+        <p className="text-muted-foreground mb-2">
+          Your M-Pesa payment was not completed. This could be due to:
+        </p>
+        <ul className="text-sm text-muted-foreground mb-6 space-y-1">
+          <li>Cancelled transaction</li>
+          <li>Insufficient M-Pesa balance</li>
+          <li>Wrong PIN entered</li>
+          <li>Timeout</li>
+        </ul>
+        <div className="bg-secondary rounded-lg p-4 mb-6 max-w-sm mx-auto">
+          <Label className="text-foreground text-sm">M-Pesa Phone Number</Label>
+          <Input
+            type="tel"
+            placeholder="0700000000"
+            value={mpesaPhone}
+            onChange={(e) => setMpesaPhone(e.target.value)}
+            className="mt-1.5"
+          />
+        </div>
+        {error && <p className="text-ig-red text-sm mb-4">{error}</p>}
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            onClick={handleRetryPayment}
+            disabled={loading}
+            className="bg-ig-green hover:bg-ig-green/90 text-white gap-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Retry Payment
+          </Button>
+          <Link href="/account/orders">
+            <Button variant="outline" className="text-foreground">
+              View Orders
+            </Button>
+          </Link>
+        </div>
+        <p className="text-xs text-muted-foreground mt-4">
+          Your order has been saved. You can also pay later from your orders
+          page.
+        </p>
+      </div>
+    );
+  }
+
+  // Processing screen
   if (step === "processing") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -277,10 +416,19 @@ export default function CheckoutPage() {
         {paymentMethod === "mpesa" && (
           <>
             <p className="text-muted-foreground mb-2">
-              An M-Pesa push notification has been sent to your phone.
+              An M-Pesa prompt has been sent to {mpesaPhone}
             </p>
-            <p className="text-sm text-muted-foreground">
-              Enter your M-Pesa PIN to complete the payment.
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter your M-Pesa PIN to complete payment.
+            </p>
+            <div className="bg-ig-green-light rounded-lg p-4 max-w-sm mx-auto">
+              <div className="flex items-center justify-center gap-2 text-ig-green">
+                <Phone className="h-5 w-5" />
+                <span className="font-medium">Check your phone</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Waiting for confirmation... ({Math.min(pollingCount * 5, 60)}s)
             </p>
           </>
         )}
@@ -313,7 +461,6 @@ export default function CheckoutPage() {
         <div className="flex-1">
           {step === "details" && (
             <div className="space-y-6">
-              {/* Delivery Area Selection */}
               <div className="bg-white border border-border rounded-lg p-6">
                 <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-ig-green" />
@@ -354,7 +501,6 @@ export default function CheckoutPage() {
 
                   {showAreaDropdown && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                      {/* Pickup Station - Always at top */}
                       <div className="p-2 border-b border-border">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2 py-1">
                           Pickup Station (Free)
@@ -382,7 +528,6 @@ export default function CheckoutPage() {
                         </button>
                       </div>
 
-                      {/* Town Center */}
                       <div className="p-2 border-b border-border">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2 py-1">
                           Town Center
@@ -407,7 +552,6 @@ export default function CheckoutPage() {
                         ))}
                       </div>
 
-                      {/* Training Camps */}
                       <div className="p-2 border-b border-border">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2 py-1">
                           Training Camps
@@ -432,7 +576,6 @@ export default function CheckoutPage() {
                         ))}
                       </div>
 
-                      {/* Estates */}
                       <div className="p-2">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2 py-1">
                           Estates & Other Areas
@@ -460,7 +603,6 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* Additional Address Details (for non-pickup) */}
                 {selectedDeliveryArea &&
                   selectedDeliveryArea.type !== "pickup" && (
                     <div className="mb-4">
@@ -476,7 +618,6 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
-                {/* Delivery Info */}
                 {selectedDeliveryArea && (
                   <div className="bg-secondary/50 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-between">
@@ -506,7 +647,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Phone Number */}
                 <div>
                   <Label className="text-foreground">Phone Number *</Label>
                   <div className="relative mt-1.5">
@@ -536,7 +676,6 @@ export default function CheckoutPage() {
 
           {step === "payment" && (
             <div className="space-y-6">
-              {/* Payment Method Selection */}
               <div className="bg-white border border-border rounded-lg p-6">
                 <h2 className="text-lg font-bold text-foreground mb-4">
                   Select Payment Method
@@ -587,10 +726,9 @@ export default function CheckoutPage() {
                           <p className="text-xs text-muted-foreground">
                             {option.description}
                           </p>
-                          {isDisabled && option.maxOrder && (
+                          {isDisabled && (
                             <p className="text-xs text-ig-red mt-1">
-                              Available for orders under KES{" "}
-                              {option.maxOrder.toLocaleString()}
+                              Max order: {formatPrice(option.maxOrder!)}
                             </p>
                           )}
                         </div>
@@ -608,87 +746,55 @@ export default function CheckoutPage() {
 
                 {/* M-Pesa Details */}
                 {paymentMethod === "mpesa" && (
-                  <div className="border-t border-border pt-6">
-                    <div className="bg-ig-green-light rounded-lg p-4 mb-4 flex items-center gap-3">
-                      <div className="bg-ig-green text-white font-bold text-sm px-3 py-1.5 rounded">
-                        M-PESA
-                      </div>
-                      <p className="text-sm text-foreground">
-                        Safaricom M-Pesa - Lipa na M-Pesa
-                      </p>
+                  <div className="bg-ig-green-light rounded-lg p-4 mb-6">
+                    <Label className="text-foreground">
+                      M-Pesa Phone Number
+                    </Label>
+                    <div className="relative mt-1.5">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="tel"
+                        placeholder="0700000000"
+                        value={mpesaPhone}
+                        onChange={(e) => setMpesaPhone(e.target.value)}
+                        className="pl-10 bg-white"
+                      />
                     </div>
-                    <div>
-                      <Label className="text-foreground">
-                        M-Pesa Phone Number
-                      </Label>
-                      <div className="relative mt-1.5">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="tel"
-                          placeholder="0700000000"
-                          value={mpesaPhone}
-                          onChange={(e) => setMpesaPhone(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        You will receive an STK push to authorize payment
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      You will receive an M-Pesa prompt on this number
+                    </p>
                   </div>
                 )}
 
                 {/* Card Details */}
                 {paymentMethod === "card" && (
-                  <div className="border-t border-border pt-6 space-y-4">
+                  <div className="bg-secondary/50 rounded-lg p-4 mb-6 space-y-4">
                     <div>
-                      <Label className="text-foreground">Cardholder Name</Label>
+                      <Label className="text-foreground">Card Number</Label>
                       <Input
-                        placeholder="John Doe"
-                        value={cardDetails.name}
+                        placeholder="1234 5678 9012 3456"
+                        value={cardDetails.number}
                         onChange={(e) =>
-                          setCardDetails({
-                            ...cardDetails,
-                            name: e.target.value,
-                          })
+                          setCardDetails((prev) => ({
+                            ...prev,
+                            number: e.target.value,
+                          }))
                         }
                         className="mt-1.5"
                       />
                     </div>
-                    <div>
-                      <Label className="text-foreground">Card Number</Label>
-                      <div className="relative mt-1.5">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="4242 4242 4242 4242"
-                          value={cardDetails.number}
-                          onChange={(e) =>
-                            setCardDetails({
-                              ...cardDetails,
-                              number: e.target.value
-                                .replace(/\s/g, "")
-                                .replace(/(\d{4})/g, "$1 ")
-                                .trim(),
-                            })
-                          }
-                          maxLength={19}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-foreground">Expiry Date</Label>
+                        <Label className="text-foreground">Expiry</Label>
                         <Input
                           placeholder="MM/YY"
                           value={cardDetails.expiry}
                           onChange={(e) =>
-                            setCardDetails({
-                              ...cardDetails,
+                            setCardDetails((prev) => ({
+                              ...prev,
                               expiry: e.target.value,
-                            })
+                            }))
                           }
-                          maxLength={5}
                           className="mt-1.5"
                         />
                       </div>
@@ -698,59 +804,73 @@ export default function CheckoutPage() {
                           placeholder="123"
                           value={cardDetails.cvc}
                           onChange={(e) =>
-                            setCardDetails({
-                              ...cardDetails,
+                            setCardDetails((prev) => ({
+                              ...prev,
                               cvc: e.target.value,
-                            })
+                            }))
                           }
-                          maxLength={4}
                           className="mt-1.5"
                         />
                       </div>
                     </div>
+                    <div>
+                      <Label className="text-foreground">Cardholder Name</Label>
+                      <Input
+                        placeholder="John Doe"
+                        value={cardDetails.name}
+                        onChange={(e) =>
+                          setCardDetails((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                        className="mt-1.5"
+                      />
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Shield className="h-4 w-4" />
-                      <span>Your payment is secured with SSL encryption</span>
+                      <span>Your card details are encrypted and secure</span>
                     </div>
                   </div>
                 )}
 
-                {/* Cash on Delivery Info */}
+                {/* COD Info */}
                 {paymentMethod === "cod" && (
-                  <div className="border-t border-border pt-6">
-                    <div className="bg-secondary/50 rounded-lg p-4">
-                      <p className="text-sm text-foreground font-medium mb-2">
-                        Cash on Delivery Instructions
-                      </p>
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>
-                          Have the exact amount ready: {formatPrice(total)}
-                        </li>
-                        <li>Payment is required before opening the package</li>
-                        <li>Available for orders up to KES 20,000</li>
-                      </ul>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800">
+                          Cash on Delivery
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          Please have exact cash ready. Our delivery agent may
+                          not have change.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 mt-6">
+                <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => setStep("details")}
                     className="text-foreground"
                   >
-                    Back
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back
                   </Button>
                   <Button
                     onClick={handlePayment}
                     disabled={loading}
                     className="flex-1 bg-ig-green hover:bg-ig-green/90 text-white font-semibold"
                   >
-                    {loading
-                      ? "Processing..."
-                      : paymentMethod === "cod"
-                        ? `Place Order (${formatPrice(total)})`
-                        : `Pay ${formatPrice(total)}`}
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    {paymentMethod === "cod"
+                      ? "Place Order"
+                      : `Pay ${formatPrice(total)}`}
                   </Button>
                 </div>
               </div>
@@ -758,66 +878,63 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* Summary sidebar */}
-        <div className="lg:w-80 shrink-0">
-          <div className="bg-white border border-border rounded-lg p-6 sticky top-32">
-            <h2 className="font-bold text-foreground mb-4">Order Summary</h2>
+        {/* Order Summary Sidebar */}
+        <div className="w-full lg:w-80">
+          <div className="bg-white border border-border rounded-lg p-5 sticky top-24">
+            <h3 className="font-bold text-foreground mb-4">Order Summary</h3>
+
             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 bg-secondary rounded overflow-hidden shrink-0">
-                    {item.thumbnail && (
-                      <Image
-                        src={item.thumbnail}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                        sizes="48px"
-                      />
-                    )}
+                <div key={item.id} className="flex gap-3">
+                  <div className="w-14 h-14 bg-secondary rounded-lg overflow-hidden shrink-0">
+                    <Image
+                      src={
+                        item.thumbnail || "/images/products/running-shoes.jpg"
+                      }
+                      alt={item.name}
+                      width={56}
+                      height={56}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {item.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Qty: {item.quantity}
                     </p>
+                    <p className="text-sm font-medium text-foreground">
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
                   </div>
-                  <span className="text-xs font-medium text-foreground">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
                 </div>
               ))}
             </div>
-            <div className="border-t border-border pt-3 space-y-2">
+
+            <div className="border-t border-border pt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-foreground">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Delivery</span>
-                <span
-                  className={
-                    deliveryFee === 0 ? "text-ig-green" : "text-foreground"
-                  }
-                >
-                  {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
+                <span className="text-foreground">
+                  {subtotal >= 5000 ? (
+                    <span className="text-ig-green">Free</span>
+                  ) : (
+                    formatPrice(deliveryFee)
+                  )}
                 </span>
               </div>
-              {selectedDeliveryArea && (
-                <p className="text-xs text-muted-foreground">
-                  {selectedDeliveryArea.type === "pickup"
-                    ? "Pickup at"
-                    : "Deliver to"}
-                  : {selectedDeliveryArea.name}
+              {subtotal < 5000 && (
+                <p className="text-xs text-ig-green">
+                  Add {formatPrice(5000 - subtotal)} more for free delivery
                 </p>
               )}
-              <div className="border-t border-border pt-2 flex justify-between">
-                <span className="font-bold text-foreground">Total</span>
-                <span className="text-lg font-bold text-ig-black">
-                  {formatPrice(total)}
-                </span>
+              <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
+                <span className="text-foreground">Total</span>
+                <span className="text-ig-green">{formatPrice(total)}</span>
               </div>
             </div>
           </div>
