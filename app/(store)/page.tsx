@@ -158,7 +158,7 @@ export default function HomePage() {
                           src={slide.image}
                           alt={slide.title}
                           fill
-                          className="object-cover opacity-20"
+                          className="object-cover opacity-30"
                           sizes="(max-width: 768px) 100vw, 800px"
                           priority={idx === 0}
                         />
