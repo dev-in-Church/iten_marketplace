@@ -55,7 +55,7 @@ export default function LoginPage() {
       <Link href="/" className="mb-8">
         <Image
           src="/images/logo.png"
-          alt="ItenGear"
+          alt="RunnerMKT"
           width={160}
           height={56}
           className="h-14 w-auto"
@@ -67,7 +67,7 @@ export default function LoginPage() {
           Welcome Back
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-6">
-          Sign in to your ItenGear account
+          Sign in to your RunnerMKT account
         </p>
 
         {error && (

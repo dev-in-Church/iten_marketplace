@@ -96,7 +96,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-2 mb-3">
+          <div className="flex flex-col items-baseline gap-2 mb-3">
             <span className="text-base font-bold text-ig-black">
               {formatPrice(product.price, product.currency)}
             </span>

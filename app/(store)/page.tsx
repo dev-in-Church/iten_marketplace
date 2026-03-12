@@ -43,7 +43,7 @@ const HERO_SLIDES = [
     title: "Become a Vendor",
     subtitle: "Reach thousands of sports enthusiasts. Start selling today.",
     cta: "Start Selling",
-    ctaLink: "/vendor",
+    ctaLink: "https://vendorcenter.sporttechies.com/",
     bg: "from-ig-black to-ig-black/80",
     image: "/images/products/jersey.jpg",
   },
@@ -503,13 +503,13 @@ export default function HomePage() {
       <section className="bg-ig-black">
         <div className="max-w-7xl mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 text-balance">
-            Start Selling on ItenGear Today
+            Start Selling on RunnerMKT Today
           </h2>
           <p className="text-white/60 mb-6 max-w-lg mx-auto text-pretty text-sm md:text-base">
             Join hundreds of vendors selling sports equipment to customers
             across Kenya. Get verified and reach more buyers.
           </p>
-          <Link href="/vendor">
+          <Link href="https://vendorcenter.sporttechies.com/">
             <Button
               size="lg"
               className="bg-ig-green hover:bg-ig-green/90 text-white font-semibold gap-2"

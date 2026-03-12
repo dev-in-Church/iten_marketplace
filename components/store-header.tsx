@@ -51,10 +51,10 @@ export function StoreHeader() {
           <p>Free delivery on orders above KES 5,000</p>
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/vendor"
+              href="https://vendorcenter.sporttechies.com/"
               className="hover:text-ig-green transition-colors"
             >
-              Sell on ItenGear
+              Sell on RunnerMKT
             </Link>
             <Link
               href="/help"
@@ -87,7 +87,7 @@ export function StoreHeader() {
             <Link href="/" className="shrink-0">
               <Image
                 src="/images/logo.png"
-                alt="ItenGear - Sports Equipment Marketplace"
+                alt="RunnerMKT - Sports Equipment Marketplace"
                 width={140}
                 height={48}
                 className="h-10 md:h-12 w-auto"
@@ -285,11 +285,11 @@ export function StoreHeader() {
             </ul>
             <div className="border-t border-border mt-4 pt-4 space-y-1">
               <Link
-                href="/vendor"
+                href="https://vendorcenter.sporttechies.com/"
                 className="block px-3 py-2 rounded-md text-sm font-medium text-ig-green hover:bg-ig-green-light"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sell on ItenGear
+                Sell on RunnerMKT
               </Link>
             </div>
           </nav>

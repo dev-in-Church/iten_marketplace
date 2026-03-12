@@ -7,7 +7,9 @@ export function CookieConsent() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const consent = document.cookie.split(";").find((c) => c.trim().startsWith("cookie_consent="));
+    const consent = document.cookie
+      .split(";")
+      .find((c) => c.trim().startsWith("cookie_consent="));
     if (!consent) {
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
@@ -15,12 +17,14 @@ export function CookieConsent() {
   }, []);
 
   const accept = () => {
-    document.cookie = "cookie_consent=accepted;path=/;max-age=31536000;SameSite=Lax";
+    document.cookie =
+      "cookie_consent=accepted;path=/;max-age=31536000;SameSite=Lax";
     setShow(false);
   };
 
   const decline = () => {
-    document.cookie = "cookie_consent=declined;path=/;max-age=31536000;SameSite=Lax";
+    document.cookie =
+      "cookie_consent=declined;path=/;max-age=31536000;SameSite=Lax";
     setShow(false);
   };
 
@@ -32,15 +36,16 @@ export function CookieConsent() {
         <div className="flex-1">
           <h3 className="font-semibold text-lg mb-1">We value your privacy</h3>
           <p className="text-sm text-white/70">
-            ItenGear uses cookies to enhance your shopping experience, remember your cart, and keep you logged in.
-            We do not sell your personal data.
+            RunnerMKT uses cookies to enhance your shopping experience, remember
+            your cart, and keep you logged in. We do not sell your personal
+            data.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <Button
             variant="outline"
             onClick={decline}
-            className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+            className="border-white/30 text-white/10 hover:bg-white/10 hover:text-white"
           >
             Decline
           </Button>
