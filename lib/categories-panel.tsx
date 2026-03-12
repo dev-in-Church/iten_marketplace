@@ -16,7 +16,7 @@ export interface Category {
   slug: string;
   icon: ReactElement;
   description?: string;
-  image_url?: string;
+  image_url: string;
 }
 
 export const MOCK_CATEGORIES: Category[] = [
@@ -26,6 +26,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "running",
     icon: <Footprints />,
     description: "Running shoes, apparel and accessories",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "2",
@@ -33,6 +34,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "football",
     icon: <Trophy />,
     description: "Football boots, balls and gear",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "3",
@@ -40,6 +42,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "basketball",
     icon: <Dribbble />,
     description: "Basketball shoes, jerseys and equipment",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "4",
@@ -47,6 +50,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "tennis",
     icon: <CircleDot />,
     description: "Tennis rackets, shoes and apparel",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "5",
@@ -54,6 +58,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "swimming",
     icon: <Waves />,
     description: "Swimwear, goggles and accessories",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "6",
@@ -61,6 +66,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "gym-fitness",
     icon: <Dumbbell />,
     description: "Gym equipment, weights and fitness gear",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "7",
@@ -68,6 +74,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "cycling",
     icon: <Bike />,
     description: "Bikes, helmets and cycling accessories",
+    image_url: "/images/placeholder.png",
   },
   {
     id: "8",
@@ -75,5 +82,6 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "athletics",
     icon: <Timer />,
     description: "Track and field equipment and apparel",
+    image_url: "/images/placeholder.png",
   },
 ];
