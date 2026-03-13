@@ -29,7 +29,7 @@ export function HomeProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group">
-      <div className="bg-white border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
         {/* Image */}
         <div className="relative aspect-square bg-secondary overflow-hidden">
           {product.thumbnail ? (
@@ -72,7 +72,7 @@ export function HomeProductCard({ product }: { product: Product }) {
           )} */}
 
           {/* Name */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1.5 flex-1">
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1 flex-1">
             {product.name}
           </h3>
 
@@ -96,8 +96,8 @@ export function HomeProductCard({ product }: { product: Product }) {
           </div> */}
 
           {/* Price */}
-          <div className="flex flex-col items-baseline gap-2 mb-3">
-            <span className="text-base font-bold text-ig-black">
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className="text-lg md:text-base font-bold text-ig-black">
               {formatPrice(product.price, product.currency)}
             </span>
             {product.compare_price && (

@@ -30,7 +30,7 @@ const HERO_SLIDES = [
     cta: "Shop Now",
     ctaLink: "/products",
     bg: "from-ig-green to-ig-green/80",
-    image: "/images/hero-banner.jpg",
+    image: "/images/reebok.gif",
   },
   {
     title: "Running Season is Here",
@@ -39,7 +39,7 @@ const HERO_SLIDES = [
     cta: "Explore Running",
     ctaLink: "/products?category=running",
     bg: "from-ig-red to-ig-red/80",
-    image: "/images/products/running-shoes.jpg",
+    image: "/images/asics.gif",
   },
   {
     title: "Become a Vendor",
@@ -47,7 +47,7 @@ const HERO_SLIDES = [
     cta: "Start Selling",
     ctaLink: "https://vendorcenter.sporttechies.com/",
     bg: "from-ig-black to-ig-black/80",
-    image: "/images/products/jersey.jpg",
+    image: "/images/adidas.gif",
   },
 ];
 
@@ -66,16 +66,18 @@ export default function HomePage() {
   const [canScrollRight, setCanScrollRight] = useState<Record<string, boolean>>(
     {},
   );
-  const adidasProducts = products.filter(
-    (p) => p.brand?.toLowerCase() === "adidas",
-  );
 
+  // FIX 3: Only update scroll button state when value actually changes
+  // to avoid unnecessary re-renders that cause image repaints
   const updateScrollButtons = (key: string, el: HTMLDivElement) => {
-    setCanScrollLeft((prev) => ({ ...prev, [key]: el.scrollLeft > 0 }));
-    setCanScrollRight((prev) => ({
-      ...prev,
-      [key]: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
-    }));
+    const newLeft = el.scrollLeft > 0;
+    const newRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setCanScrollLeft((prev) =>
+      prev[key] === newLeft ? prev : { ...prev, [key]: newLeft },
+    );
+    setCanScrollRight((prev) =>
+      prev[key] === newRight ? prev : { ...prev, [key]: newRight },
+    );
   };
 
   useEffect(() => {
@@ -113,10 +115,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const data = await api.get<{ products: Product[] }>("/api/products", {
-          limit: "12",
-          featured: "true",
-        });
+        const data = await api.get<{ products: Product[] }>("/api/products");
         if (data.products && data.products.length > 0) {
           setProducts(data.products);
         } else {
@@ -158,11 +157,17 @@ export default function HomePage() {
 
   const featuredProducts = products.filter((p) => p.is_featured).slice(0, 8);
   const allProducts = products.slice(0, 12);
+  const adidasProducts = products
+    .filter((p) => p.brand?.toLowerCase() === "adidas")
+    .slice(0, 9);
+
+  // console.log(adidasProducts);
+  console.log(products.length); // Is this less than your total product count?
 
   return (
-    <div>
+    <div className="bg-secondary/30">
       {/* Hero Section */}
-      <section className="bg-secondary/30">
+      <section className="">
         <div className="max-w-7xl mx-auto p-1.5 md:p-4">
           <div className="flex gap-4">
             {/* Left Column - Categories */}
@@ -197,63 +202,65 @@ export default function HomePage() {
 
             {/* Center Column - Banner Slider */}
             <div className="flex-1 min-w-0">
-              <div className="relative overflow-hidden rounded-lg h-[200px] md:h-full">
+              <div
+                className="relative overflow-hidden rounded-lg h-[200px] md:h-full group"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const mid = rect.width / 2;
+                  e.currentTarget.dataset.side = x < mid ? "left" : "right";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.dataset.side = "";
+                }}
+              >
                 <div
                   className="flex transition-transform duration-500 ease-in-out h-full"
                   style={{ transform: `translateX(-${heroIdx * 100}%)` }}
                 >
                   {HERO_SLIDES.map((slide, idx) => (
-                    <div
-                      key={idx}
-                      className={`min-w-full h-full bg-gradient-to-r ${slide.bg} relative`}
-                    >
-                      <div className="absolute inset-0">
+                    <div key={idx} className="min-w-full h-full relative">
+                      <div className="absolute inset-0 bg-gray-100">
                         <Image
                           src={slide.image}
                           alt={slide.title}
                           fill
-                          className="object-cover opacity-30"
+                          unoptimized
+                          className="object-fill"
                           sizes="(max-width: 768px) 100vw, 800px"
                           priority={idx === 0}
                         />
                       </div>
-                      <div className="relative h-full flex flex-col justify-center px-6 md:px-10 text-white">
-                        <h2 className="text-2xl md:text-4xl font-bold mb-3 text-balance max-w-md">
-                          {slide.title}
-                        </h2>
-                        <p className="text-sm md:text-base text-white/80 mb-5 max-w-sm text-pretty">
-                          {slide.subtitle}
-                        </p>
-                        <Link href={slide.ctaLink}>
-                          <Button className="bg-white text-ig-black hover:bg-white/90 font-semibold gap-2 w-fit">
-                            {slide.cta}
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                      </div>
                     </div>
                   ))}
                 </div>
+
                 <button
                   onClick={prevSlide}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-2 rounded-full text-white transition-colors"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-200
+        bg-white/20 hover:bg-white/40
+        opacity-0 group-[[data-side='left']]:opacity-100"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
+
                 <button
                   onClick={nextSlide}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm p-2 rounded-full text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-200
+        bg-white/20 hover:bg-white/40
+        opacity-0 group-[[data-side='right']]:opacity-100"
                   aria-label="Next slide"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
+
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
                   {HERO_SLIDES.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setHeroIdx(i)}
-                      className={`h-2 rounded-full transition-all ${i === heroIdx ? "w-6 bg-white" : "w-2 bg-white/40"}`}
+                      className={`h-2 rounded-full transition-all ${i === heroIdx ? "w-6 bg-black" : "w-2 bg-ig-black"}`}
                       aria-label={`Go to slide ${i + 1}`}
                     />
                   ))}
@@ -285,7 +292,7 @@ export default function HomePage() {
       </section>
 
       {/* Brands Bar - Mobile */}
-      <section className="lg:hidden bg-white">
+      <section className="lg:hidden">
         <div className="max-w-7xl mx-auto px-1 py-2">
           <h3 className="text-sm font-semibold bg-ig-black text-white mb-4 text-center rounded-t-sm">
             Top Brands
@@ -305,16 +312,13 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Slider */}
-      <section className="bg-secondary/50">
+      <section className="">
         <div className="max-w-7xl mx-auto px-4 py-0">
           <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-md">
             <div>
               <h2 className="text-xl md:text-2xl font-bold">
                 Featured Products
               </h2>
-              {/* <p className="text-sm text-muted-foreground mt-0.5">
-                Handpicked by our team
-              </p> */}
             </div>
             <Link
               href="/products?featured=true"
@@ -370,6 +374,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* Categories - Mobile: Horizontal Slider */}
       <section className="lg:hidden max-w-7xl mx-auto px-4 py-2">
         <div className="flex items-center justify-between mb-4">
@@ -408,26 +413,22 @@ export default function HomePage() {
       </section>
 
       {/* Categories Grid - Desktop */}
-      <section className="hidden lg:block max-w-7xl mx-auto px-4 pb-2">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold text-foreground">
-            Browse Categories
-          </h2>
-          <Link
-            href="/products"
-            className="text-sm text-ig-green font-medium hover:underline flex items-center gap-1"
-          >
-            View All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-4 gap-6">
+      <section className="hidden lg:block max-w-7xl mx-auto px-4 my-2">
+        <div className="grid grid-cols-4 gap-6 bg-ig-green-light rounded-md py-3">
           {MOCK_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
               href={`/products?category=${cat.slug}`}
               className="flex flex-col items-center gap-3 group"
             >
-              <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-ig-green transition-all shadow-md group-hover:scale-105">
+              <div
+                className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-border
+          group-hover:ring-ig-green transition-all shadow-md
+          group-hover:scale-105
+          will-change-transform [transform:translateZ(0)]"
+              >
+                {" "}
+                {/* ← ADD THIS */}
                 <Image
                   src={cat.image_url}
                   alt={cat.name}
@@ -440,30 +441,21 @@ export default function HomePage() {
                 <h3 className="text-sm font-semibold text-foreground">
                   {cat.name}
                 </h3>
-                {cat.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                    {cat.description}
-                  </p>
-                )}
               </div>
             </Link>
           ))}
         </div>
       </section>
+
       {/* Adidas Deals Slider */}
       <section className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-md">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
-              Adidas Deals
-            </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Latest gear from Adidas
-            </p>
+            <h2 className="text-xl md:text-2xl font-bold">Best Of Adidas</h2>
           </div>
           <Link
             href="/products?brand=Adidas"
-            className="hidden sm:flex text-sm text-ig-green font-medium hover:underline items-center gap-1"
+            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
           >
             See All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -485,7 +477,7 @@ export default function HomePage() {
             className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
           >
             {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
+              Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
                   className="min-w-[200px] sm:min-w-[220px] snap-start"
@@ -522,13 +514,18 @@ export default function HomePage() {
       </section>
 
       {/* Promo Banner - GIF */}
-      <section className="max-w-7xl mx-auto px-4 pb-2">
+      {/* FIX 1 (continued): Switched from plain <img> to next/image with unoptimized
+          to prevent GIF restarts on re-render. Added bg-gray-100 as placeholder
+          to avoid white flash while the GIF loads. */}
+      <section className="hidden lg:block max-w-7xl mx-auto px-4 pb-2">
         <Link href="/products?category=running">
-          <div className="rounded-xl overflow-hidden w-full border">
-            <img
+          <div className="relative rounded-xl h-[252px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
+            <Image
               src="/images/banner.gif"
               alt="Promotional offer"
-              className="w-full h-auto object-cover"
+              fill
+              unoptimized
+              className="object-cover"
             />
           </div>
         </Link>
@@ -562,7 +559,7 @@ export default function HomePage() {
             className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
           >
             {loading
-              ? Array.from({ length: 12 }).map((_, i) => (
+              ? Array.from({ length: 10 }).map((_, i) => (
                   <div
                     key={i}
                     className="min-w-[200px] sm:min-w-[220px] snap-start"
