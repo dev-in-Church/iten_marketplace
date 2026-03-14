@@ -174,16 +174,16 @@ export default function HomePage() {
             <div className="hidden lg:block w-56 shrink-0">
               <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-green text-white px-4 py-3 font-semibold text-sm">
-                  Categories
+                  Top Categories
                 </div>
-                <nav className="py-2 px-4">
+                <nav className="py-1 px-4">
                   {MOCK_CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
                       href={`/products?category=${cat.slug}`}
-                      className="flex items-center px-4 py-2.5 text-sm text-foreground rounded-md hover:bg-ig-green-light hover:text-ig-green transition-colors"
+                      className="flex items-center px-4 py-2 text-sm text-foreground rounded-md hover:bg-ig-green-light hover:text-ig-green transition-colors"
                     >
-                      <span className="w-5 h-5 flex items-center justify-center mr-3">
+                      <span className="w-4 h-4 flex items-center justify-center mr-3">
                         {cat.icon}
                       </span>
                       {cat.name}
@@ -203,7 +203,7 @@ export default function HomePage() {
             {/* Center Column - Banner Slider */}
             <div className="flex-1 min-w-0">
               <div
-                className="relative overflow-hidden rounded-lg h-[200px] md:h-full group"
+                className="relative overflow-hidden rounded-lg h-[198px] lg:h-[348px] lg:w-[712px]  group"
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = e.clientX - rect.left;
@@ -215,7 +215,7 @@ export default function HomePage() {
                 }}
               >
                 <div
-                  className="flex transition-transform duration-500 ease-in-out h-full"
+                  className="flex transition-none duration-500 ease-in-out h-full"
                   style={{ transform: `translateX(-${heroIdx * 100}%)` }}
                 >
                   {HERO_SLIDES.map((slide, idx) => (
@@ -269,12 +269,12 @@ export default function HomePage() {
             </div>
 
             {/* Right Column - Brands */}
-            <div className="hidden lg:block w-44 shrink-0">
+            <div className="hidden lg:block w-70 shrink-0">
               <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-black text-white px-4 py-3 font-semibold text-sm">
                   Top Brands
                 </div>
-                <div className="p-2 grid grid-cols-2 gap-2">
+                <div className="py-2 px-4 grid grid-cols-3 gap-2">
                   {FEATURED_BRANDS.map((brand) => (
                     <Link
                       key={brand.id}
@@ -294,17 +294,25 @@ export default function HomePage() {
       {/* Brands Bar - Mobile */}
       <section className="lg:hidden">
         <div className="max-w-7xl mx-auto px-1 py-2">
-          <h3 className="text-sm font-semibold bg-ig-black text-white mb-4 text-center rounded-t-sm">
+          <h3 className="text-xl font-semibold bg-ig-black text-white mb-4 text-center rounded-t-sm">
             Top Brands
           </h3>
-          <div className="grid grid-cols-5 justify-center gap-2 px-1.5 flex-wrap">
+          <div className="flex gap-4 overflow-x-auto p-2 scrollbar-hide">
             {FEATURED_BRANDS.map((brand) => (
               <Link
                 key={brand.id}
                 href={`/products?brand=${encodeURIComponent(brand.name)}`}
-                className="flex items-center justify-center px-1 shadow-sm shadow-ig-green-light rounded-sm hover:bg-ig-green-light transition-all group"
+                className="flex-shrink-0 flex  items-center gap-2 group"
               >
-                <img src={`${brand.logo}`} alt="" className="h-16" />
+                <div className="w-16 h-16 p-2 rounded-sm overflow-hidden  group-hover:shadow-sm transition-all group-hover:scale-105">
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </Link>
             ))}
           </div>
@@ -312,9 +320,9 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Slider */}
-      <section className="">
-        <div className="max-w-7xl mx-auto px-4 py-0">
-          <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-md">
+      <section className="max-w-7xl mx-auto px-4 py-6">
+        <div className="">
+          <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-sm">
             <div>
               <h2 className="text-xl md:text-2xl font-bold">
                 Featured Products
@@ -331,7 +339,7 @@ export default function HomePage() {
           <div className="relative flex items-center">
             <button
               onClick={() => scrollSlider(productSliderRef, "left")}
-              className={`absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
                 canScrollLeft["featured"] ? "flex" : "hidden"
               }`}
               aria-label="Scroll left"
@@ -364,7 +372,7 @@ export default function HomePage() {
 
             <button
               onClick={() => scrollSlider(productSliderRef, "right")}
-              className={`absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
                 canScrollRight["featured"] ? "flex" : "hidden"
               }`}
               aria-label="Scroll right"
@@ -414,7 +422,7 @@ export default function HomePage() {
 
       {/* Categories Grid - Desktop */}
       <section className="hidden lg:block max-w-7xl mx-auto px-4 my-2">
-        <div className="grid grid-cols-4 gap-6 bg-ig-green-light rounded-md py-3">
+        <div className="grid grid-cols-7 gap-6 bg-ig-green-light rounded-md py-3">
           {MOCK_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
@@ -422,7 +430,7 @@ export default function HomePage() {
               className="flex flex-col items-center gap-3 group"
             >
               <div
-                className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-border
+                className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-border
           group-hover:ring-ig-green transition-all shadow-md
           group-hover:scale-105
           will-change-transform [transform:translateZ(0)]"
@@ -519,7 +527,7 @@ export default function HomePage() {
           to avoid white flash while the GIF loads. */}
       <section className="hidden lg:block max-w-7xl mx-auto px-4 pb-2">
         <Link href="/products?category=running">
-          <div className="relative rounded-xl h-[252px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
+          <div className="relative rounded-xl h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
             <Image
               src="/images/banner.gif"
               alt="Promotional offer"
