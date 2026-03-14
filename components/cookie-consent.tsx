@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export function CookieConsent() {
+interface CookieConsentProps {
+  onDismiss?: () => void;
+}
+
+export function CookieConsent({ onDismiss }: CookieConsentProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -13,20 +17,29 @@ export function CookieConsent() {
     if (!consent) {
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
+    } else {
+      // Already consented before — unblock the sell popup immediately
+      onDismiss?.();
     }
   }, []);
 
-  const accept = () => {
-    document.cookie =
-      "cookie_consent=accepted;path=/;max-age=31536000;SameSite=Lax";
+  const handleDismiss = (action: () => void) => {
+    action();
     setShow(false);
+    onDismiss?.();
   };
 
-  const decline = () => {
-    document.cookie =
-      "cookie_consent=declined;path=/;max-age=31536000;SameSite=Lax";
-    setShow(false);
-  };
+  const accept = () =>
+    handleDismiss(() => {
+      document.cookie =
+        "cookie_consent=accepted;path=/;max-age=31536000;SameSite=Lax";
+    });
+
+  const decline = () =>
+    handleDismiss(() => {
+      document.cookie =
+        "cookie_consent=declined;path=/;max-age=31536000;SameSite=Lax";
+    });
 
   if (!show) return null;
 
@@ -45,7 +58,7 @@ export function CookieConsent() {
           <Button
             variant="outline"
             onClick={decline}
-            className="border-white/30 text-white/10 hover:bg-white/10 hover:text-white"
+            className="bg-white text-ig-red hover:bg-white/10 hover:text-white"
           >
             Decline
           </Button>

@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { SellOnRunnerMKT } from "@/components/vendor-consent";
 
 const HERO_SLIDES = [
   {
@@ -676,6 +677,7 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      {/* <SellOnRunnerMKT /> */}
     </div>
   );
 }
