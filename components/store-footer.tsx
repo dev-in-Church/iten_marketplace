@@ -173,12 +173,12 @@ export function StoreFooter() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 text-ig-green shrink-0" />
-                <span className="text-white/60 text-sm">+254 700 000 000</span>
+                <span className="text-white/60 text-sm">+254 729 520 130</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-ig-green shrink-0" />
                 <span className="text-white/60 text-sm">
-                  support@runnermkt.com
+                  sporttechies12@gmail.com
                 </span>
               </li>
             </ul>

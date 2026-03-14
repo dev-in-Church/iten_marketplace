@@ -29,7 +29,7 @@ export function SellOnRunnerMKT({ canShow = false }: SellOnRunnerMKTProps) {
 
   return (
     <div
-      className={`fixed bottom-8 left-0 right-0 z-50 transition-transform duration-500 ease-in-out ${
+      className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >
