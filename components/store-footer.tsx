@@ -192,9 +192,32 @@ export function StoreFooter() {
           </p>
           <div className="flex items-center gap-3">
             <span className="text-white/40 text-xs">Accepted Payments:</span>
-            <span className="bg-ig-green px-3 py-1 rounded text-xs font-bold">
+            {/* <span className="bg-ig-green px-3 py-1 rounded text-xs font-bold">
               M-PESA
-            </span>
+            </span> */}
+            <div className="flex gap-3">
+              <Image
+                src="/images/mpesa.svg"
+                alt="M-PESA"
+                width={140}
+                height={48}
+                className="h-10 lg:h-12 w-auto"
+              />{" "}
+              <Image
+                src="/images/visa.svg"
+                alt="VISA"
+                width={140}
+                height={48}
+                className="h-10 lg:h-12 w-auto rounded-md"
+              />{" "}
+              <Image
+                src="/images/mastercard.svg"
+                alt="MasterCard"
+                width={140}
+                height={48}
+                className="h-10 lg:h-12 w-auto rounded-e-md"
+              />
+            </div>
           </div>
         </div>
       </div>
