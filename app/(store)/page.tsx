@@ -60,6 +60,7 @@ export default function HomePage() {
   const productSliderRef = useRef<HTMLDivElement>(null);
   const newArrivalsSliderRef = useRef<HTMLDivElement>(null);
   const adidasSliderRef = useRef<HTMLDivElement>(null);
+  const nikeSliderRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState<Record<string, boolean>>(
     {},
@@ -86,6 +87,7 @@ export default function HomePage() {
       { key: "featured", ref: productSliderRef },
       { key: "newArrivals", ref: newArrivalsSliderRef },
       { key: "adidas", ref: adidasSliderRef },
+      { key: "nike", ref: nikeSliderRef },
     ];
 
     const listeners: {
@@ -161,7 +163,9 @@ export default function HomePage() {
   const adidasProducts = products
     .filter((p) => p.brand?.toLowerCase() === "adidas")
     .slice(0, 9);
-
+  const nikeProducts = products
+    .filter((p) => p.brand?.toLowerCase() === "nike")
+    .slice(0, 9);
   // console.log(adidasProducts);
   console.log(products.length); // Is this less than your total product count?
 
@@ -305,7 +309,7 @@ export default function HomePage() {
                 href={`/products?brand=${encodeURIComponent(brand.name)}`}
                 className="flex-shrink-0 flex  items-center gap-2 group"
               >
-                <div className="w-16 h-16 p-2 rounded-sm overflow-hidden  group-hover:shadow-sm transition-all group-hover:scale-105">
+                <div className="w-16 h-16 p-2 rounded-sm overflow-hidden shadow-sm transition-all group-hover:scale-105">
                   <Image
                     src={brand.logo}
                     alt={brand.name}
@@ -321,7 +325,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Slider */}
-      <section className="max-w-7xl mx-auto px-4 py-6">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
         <div className="">
           <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-sm">
             <div>
@@ -422,7 +426,7 @@ export default function HomePage() {
       </section>
 
       {/* Categories Grid - Desktop */}
-      <section className="hidden lg:block max-w-7xl mx-auto px-4 my-2">
+      <section className="hidden lg:block max-w-7xl mx-auto px-1 lg:px-4 my-2">
         <div className="grid grid-cols-7 gap-6 bg-ig-green-light rounded-md py-3">
           {MOCK_CATEGORIES.map((cat) => (
             <Link
@@ -457,8 +461,8 @@ export default function HomePage() {
       </section>
 
       {/* Adidas Deals Slider */}
-      <section className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-md">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
+        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
           <div>
             <h2 className="text-xl md:text-2xl font-bold">Best Of Adidas</h2>
           </div>
@@ -473,7 +477,7 @@ export default function HomePage() {
         <div className="relative flex items-center">
           <button
             onClick={() => scrollSlider(adidasSliderRef, "left")}
-            className={`absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
               canScrollLeft["adidas"] ? "flex" : "hidden"
             }`}
             aria-label="Scroll left"
@@ -512,7 +516,7 @@ export default function HomePage() {
 
           <button
             onClick={() => scrollSlider(adidasSliderRef, "right")}
-            className={`absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
               canScrollRight["adidas"] ? "flex" : "hidden"
             }`}
             aria-label="Scroll right"
@@ -523,9 +527,6 @@ export default function HomePage() {
       </section>
 
       {/* Promo Banner - GIF */}
-      {/* FIX 1 (continued): Switched from plain <img> to next/image with unoptimized
-          to prevent GIF restarts on re-render. Added bg-gray-100 as placeholder
-          to avoid white flash while the GIF loads. */}
       <section className="hidden lg:block max-w-7xl mx-auto px-4 pb-2">
         <Link href="/products?category=running">
           <div className="relative rounded-xl h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
@@ -541,8 +542,8 @@ export default function HomePage() {
       </section>
 
       {/* New Arrivals Slider */}
-      <section className="max-w-7xl mx-auto px-4 pb-10">
-        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-md">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 pb-10">
+        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
           <h2 className="text-xl md:text-2xl font-bold">New Arrivals</h2>
           <Link
             href="/products"
@@ -555,7 +556,7 @@ export default function HomePage() {
         <div className="relative flex items-center">
           <button
             onClick={() => scrollSlider(newArrivalsSliderRef, "left")}
-            className={`absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
               canScrollLeft["newArrivals"] ? "flex" : "hidden"
             }`}
             aria-label="Scroll left"
@@ -588,8 +589,74 @@ export default function HomePage() {
 
           <button
             onClick={() => scrollSlider(newArrivalsSliderRef, "right")}
-            className={`absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
               canScrollRight["newArrivals"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+      </section>
+
+      {/* Adidas Deals Slider */}
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
+        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">Best Of Nike</h2>
+          </div>
+          <Link
+            href="/products?brand=Nike"
+            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+          >
+            See All <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="relative flex items-center">
+          <button
+            onClick={() => scrollSlider(nikeSliderRef, "left")}
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollLeft["nike"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4 text-foreground" />
+          </button>
+
+          <div
+            ref={nikeSliderRef}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+          >
+            {loading ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : nikeProducts.length > 0 ? (
+              nikeProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">
+                No Nike products available at the moment.
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => scrollSlider(nikeSliderRef, "right")}
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollRight["nike"] ? "flex" : "hidden"
             }`}
             aria-label="Scroll right"
           >
