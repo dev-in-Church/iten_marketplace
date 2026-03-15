@@ -33,11 +33,16 @@ import {
   Building,
   Shield,
   AlertCircle,
-  RefreshCw,
-  X,
+  Lock,
 } from "lucide-react";
 
-type Step = "details" | "payment" | "processing" | "failed" | "success";
+type Step =
+  | "details"
+  | "payment"
+  | "payment_card"
+  | "processing"
+  | "failed"
+  | "success";
 
 function getAreaIcon(type: DeliveryArea["type"]) {
   switch (type) {
@@ -63,14 +68,14 @@ export default function CheckoutPage() {
   const [additionalAddress, setAdditionalAddress] = useState("");
   const [phone, setPhone] = useState(user?.phone || "");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mpesa");
-  const [mpesaPhone, setMpesaPhone] = useState(user?.phone || "");
   const [cardDetails, setCardDetails] = useState({
-    number: "",
-    expiry: "",
-    cvc: "",
-    name: "",
+    cardNumber: "",
+    expiryMonth: "",
+    expiryYear: "",
+    cvv: "",
   });
-  const [error, setError] = useState("");
+  const [paystackReference, setPaystackReference] = useState("");
+  const [paystackAccessCode, setPaystackAccessCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
@@ -80,6 +85,8 @@ export default function CheckoutPage() {
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string>("pending");
   const [pollingCount, setPollingCount] = useState(0);
+  const [error, setError] = useState("");
+  const [mpesaPhone, setMpesaPhone] = useState(user?.phone || "");
 
   const selectedDeliveryArea = useMemo(
     () => ITEN_DELIVERY_AREAS.find((a) => a.id === selectedArea),
@@ -206,20 +213,10 @@ export default function CheckoutPage() {
         return;
       }
     } else if (paymentMethod === "card") {
-      if (
-        !cardDetails.number ||
-        !cardDetails.expiry ||
-        !cardDetails.cvc ||
-        !cardDetails.name
-      ) {
-        setError("Please fill in all card details");
-        return;
-      }
+      // Card payment handled by Paystack - no client-side validation needed
     } else if (paymentMethod === "cod") {
       if (total > 20000) {
-        setError(
-          "Cash on Delivery is only available for orders under KES 20,000",
-        );
+        setError("Cash on Delivery is limited to orders under KES 20,000");
         return;
       }
     }
@@ -261,14 +258,21 @@ export default function CheckoutPage() {
         setCheckoutRequestId(mpesaData.checkoutRequestId);
         // Polling will start via useEffect
       } else if (paymentMethod === "card") {
-        // Process card payment
-        await api.post("/api/payments/card", {
+        // Initialize Paystack payment for inline form
+        const paystackData = await api.post<{
+          data: { accessCode: string; reference: string };
+        }>("/api/payments/paystack-init", {
           orderId: orderData.order.id,
-          cardLast4: cardDetails.number.slice(-4),
         });
-        clearCart();
-        setStep("success");
-        setLoading(false);
+
+        if (paystackData.data?.accessCode && paystackData.data?.reference) {
+          setPaystackAccessCode(paystackData.data.accessCode);
+          setPaystackReference(paystackData.data.reference);
+          setStep("payment_card");
+          setLoading(false);
+        } else {
+          throw new Error("Failed to initialize Paystack payment");
+        }
       } else if (paymentMethod === "cod") {
         // COD - order already confirmed
         clearCart();
@@ -282,6 +286,75 @@ export default function CheckoutPage() {
           : "Failed to process order. Please try again.",
       );
       setStep("payment");
+      setLoading(false);
+    }
+  };
+
+  const handleCardPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (
+      !cardDetails.cardNumber ||
+      !cardDetails.expiryMonth ||
+      !cardDetails.expiryYear ||
+      !cardDetails.cvv
+    ) {
+      setError("Please fill in all card details");
+      return;
+    }
+
+    if (
+      cardDetails.cardNumber.length < 13 ||
+      cardDetails.cardNumber.length > 19
+    ) {
+      setError("Invalid card number");
+      return;
+    }
+
+    if (
+      cardDetails.expiryMonth.length !== 2 ||
+      parseInt(cardDetails.expiryMonth) > 12
+    ) {
+      setError("Invalid expiry month (01-12)");
+      return;
+    }
+
+    if (cardDetails.expiryYear.length !== 2) {
+      setError("Invalid expiry year");
+      return;
+    }
+
+    if (cardDetails.cvv.length !== 3 && cardDetails.cvv.length !== 4) {
+      setError("Invalid CVV");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Send card details to backend to charge
+      const chargeRes = await api.post<{ success: boolean; message: string }>(
+        "/api/payments/paystack-charge",
+        {
+          reference: paystackReference,
+          orderId,
+          cardNumber: cardDetails.cardNumber,
+          expiryMonth: cardDetails.expiryMonth,
+          expiryYear: cardDetails.expiryYear,
+          cvv: cardDetails.cvv,
+          email: user?.email,
+        },
+      );
+
+      if (!chargeRes.success) {
+        throw new Error(chargeRes.message || "Card charge failed");
+      }
+
+      clearCart();
+      setStep("success");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Card payment failed");
       setLoading(false);
     }
   };
@@ -312,7 +385,175 @@ export default function CheckoutPage() {
     }
   };
 
-  // Success screen
+  // Card payment inline form
+  if (step === "payment_card") {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setStep("payment")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Payment Methods
+          </Button>
+        </div>
+
+        <div className="bg-white rounded-lg border border-border p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-1">
+              Card Payment
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Secure payment powered by Paystack
+            </p>
+          </div>
+
+          <form onSubmit={handleCardPayment} className="space-y-5">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-lg flex gap-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Card Number */}
+            <div>
+              <Label className="text-foreground font-semibold mb-2 block">
+                Card Number
+              </Label>
+              <Input
+                placeholder="1234 5678 9012 3456"
+                value={cardDetails.cardNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setCardDetails((prev) => ({ ...prev, cardNumber: val }));
+                }}
+                maxLength={19}
+                className="font-mono text-lg tracking-wider"
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground mt-1">13-19 digits</p>
+            </div>
+
+            {/* Expiry and CVV Row */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-foreground font-semibold mb-2 block">
+                  Month
+                </Label>
+                <Input
+                  placeholder="MM"
+                  value={cardDetails.expiryMonth}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+                    setCardDetails((prev) => ({ ...prev, expiryMonth: val }));
+                  }}
+                  maxLength={2}
+                  className="font-mono text-center text-lg"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label className="text-foreground font-semibold mb-2 block">
+                  Year
+                </Label>
+                <Input
+                  placeholder="YY"
+                  value={cardDetails.expiryYear}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+                    setCardDetails((prev) => ({ ...prev, expiryYear: val }));
+                  }}
+                  maxLength={2}
+                  className="font-mono text-center text-lg"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label className="text-foreground font-semibold mb-2 block">
+                  CVV
+                </Label>
+                <Input
+                  placeholder="123"
+                  value={cardDetails.cvv}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setCardDetails((prev) => ({ ...prev, cvv: val }));
+                  }}
+                  maxLength={4}
+                  type="password"
+                  className="font-mono text-center text-lg"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Order Summary Box */}
+            <div className="bg-secondary/50 rounded-lg p-4 mt-6 border border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Order Summary
+              </p>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground">Subtotal:</span>
+                  <span className="font-medium text-foreground">
+                    KES {subtotal.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground">Delivery Fee:</span>
+                  <span className="font-medium text-foreground">
+                    KES {deliveryFee.toLocaleString()}
+                  </span>
+                </div>
+                <div className="border-t border-border pt-2 mt-3 flex justify-between">
+                  <span className="text-base font-bold text-foreground">
+                    Total Amount:
+                  </span>
+                  <span className="text-base font-bold text-ig-green">
+                    KES {total.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Button */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-ig-green hover:bg-ig-green/90 text-white h-12 font-semibold gap-2 mt-6"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processing Payment...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-5 w-5" />
+                  Pay KES {total.toLocaleString()}
+                </>
+              )}
+            </Button>
+
+            {/* Security Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-3">
+              <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-900">
+                <p className="font-semibold mb-1">Secure Payment</p>
+                <p>
+                  Your card details are encrypted and handled securely by
+                  Paystack. We never store your card information.
+                </p>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
   if (step === "success") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -763,74 +1004,6 @@ export default function CheckoutPage() {
                     <p className="text-xs text-muted-foreground mt-2">
                       You will receive an M-Pesa prompt on this number
                     </p>
-                  </div>
-                )}
-
-                {/* Card Details */}
-                {paymentMethod === "card" && (
-                  <div className="bg-secondary/50 rounded-lg p-4 mb-6 space-y-4">
-                    <div>
-                      <Label className="text-foreground">Card Number</Label>
-                      <Input
-                        placeholder="1234 5678 9012 3456"
-                        value={cardDetails.number}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            number: e.target.value,
-                          }))
-                        }
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-foreground">Expiry</Label>
-                        <Input
-                          placeholder="MM/YY"
-                          value={cardDetails.expiry}
-                          onChange={(e) =>
-                            setCardDetails((prev) => ({
-                              ...prev,
-                              expiry: e.target.value,
-                            }))
-                          }
-                          className="mt-1.5"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-foreground">CVC</Label>
-                        <Input
-                          placeholder="123"
-                          value={cardDetails.cvc}
-                          onChange={(e) =>
-                            setCardDetails((prev) => ({
-                              ...prev,
-                              cvc: e.target.value,
-                            }))
-                          }
-                          className="mt-1.5"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-foreground">Cardholder Name</Label>
-                      <Input
-                        placeholder="John Doe"
-                        value={cardDetails.name}
-                        onChange={(e) =>
-                          setCardDetails((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        className="mt-1.5"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Shield className="h-4 w-4" />
-                      <span>Your card details are encrypted and secure</span>
-                    </div>
                   </div>
                 )}
 
