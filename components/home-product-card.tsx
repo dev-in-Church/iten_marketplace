@@ -79,7 +79,7 @@ export function HomeProductCard({ product }: { product: Product }) {
           )} */}
 
           {/* Name */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors flex-1">
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors flex-1 truncate">
             {product.name}
           </h3>
 

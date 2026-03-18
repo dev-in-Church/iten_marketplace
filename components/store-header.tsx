@@ -27,14 +27,14 @@ import {
 } from "lucide-react";
 
 const CATEGORIES = [
-  { name: "Running", slug: "running" },
-  { name: "Football", slug: "football" },
-  { name: "Basketball", slug: "basketball" },
-  { name: "Tennis", slug: "tennis" },
-  { name: "Swimming", slug: "swimming" },
+  { name: "Tees", slug: "running" },
+  { name: "Hats & Beanies", slug: "football" },
+  { name: "Water Bottles", slug: "basketball" },
+  { name: "Pants", slug: "tennis" },
+  { name: "Smart Watches", slug: "swimming" },
   { name: "Gym & Fitness", slug: "gym-fitness" },
-  { name: "Cycling", slug: "cycling" },
-  { name: "Athletics", slug: "athletics" },
+  { name: "Hiking", slug: "cycling" },
+  { name: "Jackets", slug: "athletics" },
 ];
 
 export function StoreHeader() {
@@ -252,7 +252,7 @@ export function StoreHeader() {
                 <li key={cat.slug}>
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className="block px-4 py-2 text-sm font-medium rounded-md bg-ig-green-light text-ig-green hover:bg-white/10 transition-colors whitespace-nowrap"
+                    className="block px-3 py-1.5 text-sm font-medium rounded-sm bg-ig-green-light text-ig-green hover:bg-white/10 transition-colors whitespace-nowrap"
                   >
                     {cat.name}
                   </Link>

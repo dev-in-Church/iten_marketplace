@@ -177,16 +177,16 @@ export default function HomePage() {
           <div className="flex gap-4">
             {/* Left Column - Categories */}
             <div className="hidden lg:block w-56 shrink-0">
-              <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
+              <div className="bg-white rounded-sm shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-green text-white px-4 py-3 font-semibold text-sm">
                   Top Categories
                 </div>
                 <nav className="py-1 px-4">
-                  {MOCK_CATEGORIES.map((cat) => (
+                  {MOCK_CATEGORIES.slice(0, 7).map((cat) => (
                     <Link
                       key={cat.slug}
                       href={`/products?category=${cat.slug}`}
-                      className="flex items-center px-4 py-2 text-sm text-foreground rounded-md hover:bg-ig-green-light hover:text-ig-green transition-colors"
+                      className="flex items-center px-4 py-2 text-sm text-foreground rounded-sm hover:bg-ig-green-light hover:text-ig-green transition-colors"
                     >
                       <span className="w-4 h-4 flex items-center justify-center mr-3">
                         {cat.icon}
@@ -208,7 +208,7 @@ export default function HomePage() {
             {/* Center Column - Banner Slider */}
             <div className="flex-1 min-w-0">
               <div
-                className="relative overflow-hidden rounded-lg h-[198px] lg:h-[348px] lg:w-[712px]  group"
+                className="relative overflow-hidden rounded-sm h-[198px] lg:h-[348px] lg:w-[712px]  group"
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = e.clientX - rect.left;
@@ -275,7 +275,7 @@ export default function HomePage() {
 
             {/* Right Column - Brands */}
             <div className="hidden lg:block w-70 shrink-0">
-              <div className="bg-white rounded-lg shadow-sm shadow-ig-green-light overflow-hidden h-full">
+              <div className="bg-white rounded-sm shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-black text-white px-4 py-3 font-semibold text-sm">
                   Top Brands
                 </div>
@@ -325,7 +325,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Slider */}
-      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
         <div className="">
           <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-sm">
             <div>
@@ -461,8 +461,8 @@ export default function HomePage() {
       </section>
 
       {/* Adidas Deals Slider */}
-      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
-        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="flex items-center justify-between mb-2 bg-ig-black text-white px-2 rounded-t-sm">
           <div>
             <h2 className="text-xl md:text-2xl font-bold">Best Of Adidas</h2>
           </div>
@@ -527,7 +527,7 @@ export default function HomePage() {
       </section>
 
       {/* Promo Banner - GIF */}
-      <section className="hidden lg:block max-w-7xl mx-auto px-4 pb-2">
+      <section className="hidden lg:block max-w-7xl mx-auto px-4 py-2">
         <Link href="/products?category=running">
           <div className="relative rounded-xl h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
             <Image
@@ -535,14 +535,14 @@ export default function HomePage() {
               alt="Promotional offer"
               fill
               unoptimized
-              className="object-cover"
+              className="object-fit"
             />
           </div>
         </Link>
       </section>
 
       {/* New Arrivals Slider */}
-      <section className="max-w-7xl mx-auto px-1 lg:px-4 pb-10">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
         <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
           <h2 className="text-xl md:text-2xl font-bold">New Arrivals</h2>
           <Link
@@ -600,7 +600,7 @@ export default function HomePage() {
       </section>
 
       {/* Adidas Deals Slider */}
-      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-6">
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
         <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
           <div>
             <h2 className="text-xl md:text-2xl font-bold">Best Of Nike</h2>

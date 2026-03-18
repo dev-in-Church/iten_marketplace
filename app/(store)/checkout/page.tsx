@@ -333,28 +333,33 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Send card details to backend to charge
-      const chargeRes = await api.post<{ success: boolean; message: string }>(
-        "/api/payments/paystack-charge",
-        {
-          reference: paystackReference,
-          orderId,
-          cardNumber: cardDetails.cardNumber,
-          expiryMonth: cardDetails.expiryMonth,
-          expiryYear: cardDetails.expiryYear,
-          cvv: cardDetails.cvv,
-          email: user?.email,
-        },
-      );
+      // Send to backend which will call Paystack's charge endpoint with the reference
+      const chargeRes = await api.post<{
+        success: boolean;
+        message: string;
+        data?: unknown;
+      }>("/api/payments/paystack-charge", {
+        reference: paystackReference,
+        orderId,
+        cardNumber: cardDetails.cardNumber,
+        expiryMonth: cardDetails.expiryMonth,
+        expiryYear: cardDetails.expiryYear,
+        cvv: cardDetails.cvv,
+      });
 
       if (!chargeRes.success) {
-        throw new Error(chargeRes.message || "Card charge failed");
+        throw new Error(chargeRes.message || "Payment failed");
       }
 
+      // Payment was successful, clear cart and show success
       clearCart();
       setStep("success");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Card payment failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Payment failed. Please try again.",
+      );
       setLoading(false);
     }
   };

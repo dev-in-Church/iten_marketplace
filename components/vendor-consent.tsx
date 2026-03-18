@@ -29,8 +29,8 @@ export function SellOnRunnerMKT({ canShow = false }: SellOnRunnerMKTProps) {
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out ${
-        visible ? "translate-y-0" : "translate-y-full"
+      className={`fixed overflow-auto bottom-1 max-w-[350px] left-1 lg:bottom-1.5 lg:max-w-[350px] z-50 transition-all duration-500 ease-in-out ${
+        visible ? "block opacity-100" : "hidden opacity-0"
       }`}
     >
       <div className="bg-white border-t border-border shadow-2xl rounded-xl px-4 py-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
@@ -42,19 +42,21 @@ export function SellOnRunnerMKT({ canShow = false }: SellOnRunnerMKTProps) {
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
 
-        <div className="flex items-center gap-3 sm:gap-4 pr-6">
-          <div className="p-2.5 sm:p-3 rounded-full bg-ig-green-light shrink-0">
-            <Store className="h-5 w-5 sm:h-6 sm:w-6 text-ig-green" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm sm:text-base font-semibold text-foreground">
-              Sell on RunnerMKT
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Do you own a sports shop in{" "}
-              <span className="text-ig-green font-medium">Iten, Eldoret</span>{" "}
-              or anywhere in Kenya?
-            </p>
+        <div className="flex lg:flex-col items-center gap-3 sm:gap-4 pr-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 sm:p-3 rounded-full bg-ig-green-light shrink-0">
+              <Store className="h-5 w-5 sm:h-6 sm:w-6 text-ig-green" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm sm:text-base font-semibold text-foreground">
+                Sell on RunnerMKT
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Do you own a sports shop in{" "}
+                <span className="text-ig-green font-medium">Iten, Eldoret</span>{" "}
+                or anywhere in Kenya?
+              </p>
+            </div>
           </div>
           <Link
             href="https://vendorcenter.sporttechies.com/"

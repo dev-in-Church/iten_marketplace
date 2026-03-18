@@ -248,13 +248,13 @@ export const FEATURED_BRANDS: Brand[] = [
   {
     id: "garmin",
     name: "Garmin",
-    slug: "air-jordan",
-    logo: "/images/brands/jordan.svg",
+    slug: "garmin",
+    logo: "/images/brands/garmin.svg",
   },
   {
     id: "enda",
     name: "Enda",
     slug: "fila",
-    logo: "/images/brands/fila.svg",
+    logo: "/images/brands/enda.png",
   },
 ];
