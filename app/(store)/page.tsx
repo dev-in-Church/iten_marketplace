@@ -529,7 +529,7 @@ export default function HomePage() {
       {/* Promo Banner - GIF */}
       <section className="hidden lg:block max-w-7xl mx-auto px-4 py-2">
         <Link href="/products?category=running">
-          <div className="relative rounded-xl h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
+          <div className="relative rounded-sm h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
             <Image
               src="/images/banner.gif"
               alt="Promotional offer"
@@ -666,7 +666,7 @@ export default function HomePage() {
       </section>
 
       {/* Trust Bar */}
-      <section className="bg-white border-b border-border">
+      {/* <section className="bg-white border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             <div className="flex items-center gap-3">
@@ -721,10 +721,10 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Vendor CTA */}
-      <section className="bg-ig-black">
+      {/* <section className="bg-ig-black">
         <div className="max-w-7xl mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 text-balance">
             Start Selling on RunnerMKT Today
@@ -743,7 +743,7 @@ export default function HomePage() {
             </Button>
           </Link>
         </div>
-      </section>
+      </section> */}
       {/* <SellOnRunnerMKT /> */}
     </div>
   );

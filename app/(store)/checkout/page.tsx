@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/mock-data";
@@ -294,73 +295,64 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError("");
 
-    if (
-      !cardDetails.cardNumber ||
-      !cardDetails.expiryMonth ||
-      !cardDetails.expiryYear ||
-      !cardDetails.cvv
-    ) {
-      setError("Please fill in all card details");
+    if (!paystackReference || !user?.email) {
+      setError("Payment initialization failed. Please try again.");
       return;
     }
-
-    if (
-      cardDetails.cardNumber.length < 13 ||
-      cardDetails.cardNumber.length > 19
-    ) {
-      setError("Invalid card number");
-      return;
-    }
-
-    if (
-      cardDetails.expiryMonth.length !== 2 ||
-      parseInt(cardDetails.expiryMonth) > 12
-    ) {
-      setError("Invalid expiry month (01-12)");
-      return;
-    }
-
-    if (cardDetails.expiryYear.length !== 2) {
-      setError("Invalid expiry year");
-      return;
-    }
-
-    if (cardDetails.cvv.length !== 3 && cardDetails.cvv.length !== 4) {
-      setError("Invalid CVV");
-      return;
-    }
-
-    setLoading(true);
 
     try {
-      // Send to backend which will call Paystack's charge endpoint with the reference
-      const chargeRes = await api.post<{
-        success: boolean;
-        message: string;
-        data?: unknown;
-      }>("/api/payments/paystack-charge", {
-        reference: paystackReference,
-        orderId,
-        cardNumber: cardDetails.cardNumber,
-        expiryMonth: cardDetails.expiryMonth,
-        expiryYear: cardDetails.expiryYear,
-        cvv: cardDetails.cvv,
-      });
-
-      if (!chargeRes.success) {
-        throw new Error(chargeRes.message || "Payment failed");
+      // Use Paystack's JavaScript library
+      if (!(window as any).PaystackPop) {
+        throw new Error("Paystack library not loaded");
       }
 
-      // Payment was successful, clear cart and show success
-      clearCart();
-      setStep("success");
+      const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      if (!publicKey) {
+        throw new Error("Paystack public key not configured.");
+      }
+
+      const handler = (window as any).PaystackPop.setup({
+        key: publicKey,
+        email: user.email,
+        amount: Math.round(total * 100),
+        ref: paystackReference,
+        currency: "KES",
+        onClose: () => {
+          console.log("[v0] Payment window closed");
+        },
+        onSuccess: (response: { reference: string }) => {
+          console.log("[v0] Payment successful:", response.reference);
+          // Verify payment with backend
+          setLoading(true);
+          api
+            .get<{ success?: boolean; status?: boolean; message: string }>(
+              `/api/payments/paystack-verify?reference=${response.reference}&orderId=${orderId}`,
+            )
+            .then((verifyRes) => {
+              console.log("[v0] Verification response:", verifyRes);
+              if (verifyRes.success || verifyRes.status) {
+                clearCart();
+                setStep("success");
+              } else {
+                setError(verifyRes.message || "Payment verification failed");
+                setStep("payment_card");
+              }
+              setLoading(false);
+            })
+            .catch((err: unknown) => {
+              console.error("[v0] Verification error:", err);
+              setError(
+                err instanceof Error ? err.message : "Verification failed",
+              );
+              setStep("payment_card");
+              setLoading(false);
+            });
+        },
+      });
+
+      handler.openIframe();
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Payment failed. Please try again.",
-      );
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Payment failed");
     }
   };
 
@@ -390,7 +382,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // Card payment inline form
+  // Card payment - using Paystack popup
   if (step === "payment_card") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -399,6 +391,7 @@ export default function CheckoutPage() {
             variant="outline"
             onClick={() => setStep("payment")}
             className="gap-2"
+            disabled={loading}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Payment Methods
@@ -423,80 +416,8 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Card Number */}
-            <div>
-              <Label className="text-foreground font-semibold mb-2 block">
-                Card Number
-              </Label>
-              <Input
-                placeholder="1234 5678 9012 3456"
-                value={cardDetails.cardNumber}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setCardDetails((prev) => ({ ...prev, cardNumber: val }));
-                }}
-                maxLength={19}
-                className="font-mono text-lg tracking-wider"
-                disabled={loading}
-              />
-              <p className="text-xs text-muted-foreground mt-1">13-19 digits</p>
-            </div>
-
-            {/* Expiry and CVV Row */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label className="text-foreground font-semibold mb-2 block">
-                  Month
-                </Label>
-                <Input
-                  placeholder="MM"
-                  value={cardDetails.expiryMonth}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
-                    setCardDetails((prev) => ({ ...prev, expiryMonth: val }));
-                  }}
-                  maxLength={2}
-                  className="font-mono text-center text-lg"
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <Label className="text-foreground font-semibold mb-2 block">
-                  Year
-                </Label>
-                <Input
-                  placeholder="YY"
-                  value={cardDetails.expiryYear}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
-                    setCardDetails((prev) => ({ ...prev, expiryYear: val }));
-                  }}
-                  maxLength={2}
-                  className="font-mono text-center text-lg"
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <Label className="text-foreground font-semibold mb-2 block">
-                  CVV
-                </Label>
-                <Input
-                  placeholder="123"
-                  value={cardDetails.cvv}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    setCardDetails((prev) => ({ ...prev, cvv: val }));
-                  }}
-                  maxLength={4}
-                  type="password"
-                  className="font-mono text-center text-lg"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            {/* Order Summary Box */}
-            <div className="bg-secondary/50 rounded-lg p-4 mt-6 border border-border">
+            {/* Order Summary */}
+            <div className="bg-secondary/50 rounded-lg p-4 border border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Order Summary
               </p>
@@ -524,11 +445,23 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment Button */}
+            {/* Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+              <p className="mb-2">
+                <span className="font-semibold">How it works:</span> Click the
+                button below to open Paystack's secure payment form.
+              </p>
+              <p>
+                Enter your card details there. Your card information is never
+                stored on our servers.
+              </p>
+            </div>
+
+            {/* Pay Button */}
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-ig-green hover:bg-ig-green/90 text-white h-12 font-semibold gap-2 mt-6"
+              className="w-full bg-ig-green hover:bg-ig-green/90 text-white h-12 font-semibold gap-2"
             >
               {loading ? (
                 <>
@@ -537,20 +470,20 @@ export default function CheckoutPage() {
                 </>
               ) : (
                 <>
-                  <Lock className="h-5 w-5" />
+                  <CreditCard className="h-5 w-5" />
                   Pay KES {total.toLocaleString()}
                 </>
               )}
             </Button>
 
-            {/* Security Info */}
+            {/* Security Badge */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-3">
               <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-blue-900">
-                <p className="font-semibold mb-1">Secure Payment</p>
+                <p className="font-semibold mb-1">Secure & Encrypted</p>
                 <p>
-                  Your card details are encrypted and handled securely by
-                  Paystack. We never store your card information.
+                  Your payment is processed securely by Paystack. We never see
+                  your card details.
                 </p>
               </div>
             </div>

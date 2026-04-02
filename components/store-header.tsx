@@ -90,7 +90,7 @@ export function StoreHeader() {
                 alt="RunnerMKT - Sports Equipment Marketplace"
                 width={140}
                 height={48}
-                className="h-10 md:h-12 w-auto"
+                className="w-32 md:w-40 h-auto"
                 priority
               />
             </Link>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ShoppingCart, BadgeCheck } from "lucide-react";
+import { Star, ShoppingCart, BadgeCheck, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import type { Product } from "@/lib/mock-data";
@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group">
-      <div className="bg-white border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
         {/* Image */}
         <div className="relative aspect-square bg-secondary overflow-hidden">
           {product.thumbnail ? (
@@ -58,7 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           )}
           {product.is_featured && (
-            <span className="absolute top-2 right-2 bg-ig-green text-white text-[10px] font-bold px-2 py-0.5 rounded">
+            <span className="absolute top-2 right-2 bg-ig-black text-white text-[10px] font-bold px-2 py-0.5 rounded">
               FEATURED
             </span>
           )}
@@ -73,13 +73,13 @@ export function ProductCard({ product }: { product: Product }) {
                 {product.vendor_name}
               </span>
               {product.vendor_verified && (
-                <BadgeCheck className="h-3.5 w-3.5 text-ig-green shrink-0" />
+                <Check className="h-3.5 w-3.5 bg-ig-green text-white rounded-full shrink-0" />
               )}
             </div>
           )}
 
           {/* Name */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1.5 flex-1">
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1.5 flex-1 truncate">
             {product.name}
           </h3>
 

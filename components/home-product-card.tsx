@@ -58,7 +58,7 @@ export function HomeProductCard({ product }: { product: Product }) {
             </span>
           )}
           {product.is_featured && (
-            <span className="absolute top-2 right-2 bg-ig-green text-white text-[10px] font-bold px-2 py-0.5 rounded">
+            <span className="absolute top-2 right-2 bg-ig-black text-white text-[10px] font-bold px-2 py-0.5 rounded">
               FEATURED
             </span>
           )}
