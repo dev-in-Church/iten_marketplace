@@ -347,7 +347,8 @@ export const MOCK_CATEGORIES: Category[] = [
 ];
 
 export function formatPrice(amount?: number, currency = "KES"): string {
-  return `${currency} ${(amount ?? 0).toLocaleString("en-KE")}`;
+  const formatted = new Intl.NumberFormat("en-US").format(amount ?? 0);
+  return `${currency} ${formatted}`;
 }
 
 export function getDiscountPercent(

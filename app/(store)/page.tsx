@@ -8,21 +8,11 @@ import {
   HomeProductCard,
   HomeProductCardSkeleton,
 } from "@/components/home-product-card";
-import { Button } from "@/components/ui/button";
 import { MOCK_PRODUCTS, type Product } from "@/lib/mock-data";
 import { MOCK_CATEGORIES } from "@/lib/categories-panel";
 import { FEATURED_BRANDS } from "@/lib/delivery-data";
 import api from "@/lib/api";
-import {
-  ArrowRight,
-  Truck,
-  Shield,
-  RefreshCcw,
-  Headphones,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { SellOnRunnerMKT } from "@/components/vendor-consent";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 const HERO_SLIDES = [
   {
@@ -69,8 +59,6 @@ export default function HomePage() {
     {},
   );
 
-  // FIX 3: Only update scroll button state when value actually changes
-  // to avoid unnecessary re-renders that cause image repaints
   const updateScrollButtons = (key: string, el: HTMLDivElement) => {
     const newLeft = el.scrollLeft > 0;
     const newRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
@@ -147,7 +135,7 @@ export default function HomePage() {
   }, [nextSlide]);
 
   const scrollSlider = (
-    ref: React.RefObject<HTMLDivElement>,
+    ref: React.RefObject<HTMLDivElement | null>,
     direction: "left" | "right",
   ) => {
     if (ref.current) {
@@ -163,11 +151,12 @@ export default function HomePage() {
   const adidasProducts = products
     .filter((p) => p.brand?.toLowerCase() === "adidas")
     .slice(0, 9);
+
   const nikeProducts = products
     .filter((p) => p.brand?.toLowerCase() === "nike")
     .slice(0, 9);
-  // console.log(adidasProducts);
-  console.log(products.length); // Is this less than your total product count?
+
+  console.log(nikeProducts);
 
   return (
     <div className="bg-secondary/30">
@@ -598,153 +587,6 @@ export default function HomePage() {
           </button>
         </div>
       </section>
-
-      {/* Adidas Deals Slider */}
-      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold">Best Of Nike</h2>
-          </div>
-          <Link
-            href="/products?brand=Nike"
-            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
-          >
-            See All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(nikeSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["nike"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={nikeSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCardSkeleton />
-                </div>
-              ))
-            ) : nikeProducts.length > 0 ? (
-              nikeProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                No Nike products available at the moment.
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={() => scrollSlider(nikeSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["nike"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
-        </div>
-      </section>
-
-      {/* Trust Bar */}
-      {/* <section className="bg-white border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-ig-green-light shrink-0">
-                <Truck className="h-5 w-5 text-ig-green" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Free Delivery
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Orders over KES 5,000
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-ig-green-light shrink-0">
-                <Shield className="h-5 w-5 text-ig-green" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Secure Payments
-                </p>
-                <p className="text-xs text-muted-foreground">M-Pesa & Card</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-ig-green-light shrink-0">
-                <RefreshCcw className="h-5 w-5 text-ig-green" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Easy Returns
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  7-day return policy
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-ig-green-light shrink-0">
-                <Headphones className="h-5 w-5 text-ig-green" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  24/7 Support
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Dedicated help center
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> */}
-
-      {/* Vendor CTA */}
-      {/* <section className="bg-ig-black">
-        <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 text-balance">
-            Start Selling on RunnerMKT Today
-          </h2>
-          <p className="text-white/60 mb-6 max-w-lg mx-auto text-pretty text-sm md:text-base">
-            Join hundreds of vendors selling sports equipment to customers
-            across Kenya. Get verified and reach more buyers.
-          </p>
-          <Link href="https://vendorcenter.sporttechies.com/">
-            <Button
-              size="lg"
-              className="bg-ig-green hover:bg-ig-green/90 text-white font-semibold gap-2"
-            >
-              Become a Vendor
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </section> */}
-      {/* <SellOnRunnerMKT /> */}
     </div>
   );
 }
