@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/mock-data";
@@ -34,16 +33,12 @@ import {
   Building,
   Shield,
   AlertCircle,
+  RefreshCw,
   Lock,
+  X,
 } from "lucide-react";
 
-type Step =
-  | "details"
-  | "payment"
-  | "payment_card"
-  | "processing"
-  | "failed"
-  | "success";
+type Step = "details" | "payment" | "processing" | "failed" | "success";
 
 function getAreaIcon(type: DeliveryArea["type"]) {
   switch (type) {
@@ -69,14 +64,6 @@ export default function CheckoutPage() {
   const [additionalAddress, setAdditionalAddress] = useState("");
   const [phone, setPhone] = useState(user?.phone || "");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mpesa");
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: "",
-    expiryMonth: "",
-    expiryYear: "",
-    cvv: "",
-  });
-  const [paystackReference, setPaystackReference] = useState("");
-  const [paystackAccessCode, setPaystackAccessCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
@@ -110,6 +97,55 @@ export default function CheckoutPage() {
     return { camps, estates, centers, pickups };
   }, []);
 
+  // Check for payment callback on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatusParam = urlParams.get("payment");
+    const reference = urlParams.get("reference");
+    const orderIdParam = urlParams.get("orderId");
+
+    if (paymentStatusParam === "success" && reference) {
+      // Payment was successful
+      clearCart();
+      setStep("success");
+      // Clean URL
+      window.history.replaceState({}, "", "/checkout");
+    } else if (paymentStatusParam === "failed") {
+      setError("Payment failed. Please try again.");
+      setStep("payment");
+      // Clean URL
+      window.history.replaceState({}, "", "/checkout");
+    } else if (orderIdParam && reference) {
+      // Verify payment when returning from Paystack
+      const verifyPayment = async () => {
+        setLoading(true);
+        try {
+          const verifyRes = await api.get(
+            `/api/payments/paystack-verify?reference=${reference}&orderId=${orderIdParam}`,
+          );
+
+          if (verifyRes.data?.status) {
+            clearCart();
+            setStep("success");
+          } else {
+            setError("Payment verification failed. Please try again.");
+            setStep("payment");
+          }
+        } catch (err) {
+          console.error("Verification error:", err);
+          setError("Payment verification failed. Please contact support.");
+          setStep("payment");
+        } finally {
+          setLoading(false);
+          // Clean URL
+          window.history.replaceState({}, "", "/checkout");
+        }
+      };
+
+      verifyPayment();
+    }
+  }, [clearCart]);
+
   // Poll for M-Pesa payment status
   const pollPaymentStatus = useCallback(async () => {
     if (!checkoutRequestId || paymentStatus !== "pending") return;
@@ -129,11 +165,9 @@ export default function CheckoutPage() {
         setStep("failed");
         setLoading(false);
       } else {
-        // Still pending, continue polling (max 60 seconds / 12 polls)
         setPollingCount((prev) => prev + 1);
       }
     } catch {
-      // Continue polling on error
       setPollingCount((prev) => prev + 1);
     }
   }, [checkoutRequestId, paymentStatus, clearCart]);
@@ -206,6 +240,7 @@ export default function CheckoutPage() {
   };
 
   const handlePayment = async () => {
+    console.log("[v0] handlePayment called with paymentMethod:", paymentMethod);
     setError("");
 
     if (paymentMethod === "mpesa") {
@@ -214,7 +249,7 @@ export default function CheckoutPage() {
         return;
       }
     } else if (paymentMethod === "card") {
-      // Card payment handled by Paystack - no client-side validation needed
+      console.log("[v0] Card payment selected");
     } else if (paymentMethod === "cod") {
       if (total > 20000) {
         setError("Cash on Delivery is limited to orders under KES 20,000");
@@ -232,7 +267,7 @@ export default function CheckoutPage() {
           ? `Pickup: ${selectedDeliveryArea.name} - ${selectedDeliveryArea.description}`
           : `${selectedDeliveryArea?.name}${additionalAddress ? `, ${additionalAddress}` : ""}`;
 
-      // Step 1: Create order
+      console.log("[v0] Creating order with paymentMethod:", paymentMethod);
       const orderData = await api.post<{
         order: { id: string; order_number: string };
       }>("/api/orders", {
@@ -242,12 +277,13 @@ export default function CheckoutPage() {
         deliveryAreaId: selectedArea,
       });
 
+      console.log("[v0] Order created:", orderData.order.order_number);
       setOrderId(orderData.order.id);
       setOrderNumber(orderData.order.order_number);
       setStep("processing");
 
       if (paymentMethod === "mpesa") {
-        // Step 2: Initiate M-Pesa STK Push
+        console.log("[v0] Processing M-Pesa payment");
         const mpesaData = await api.post<{ checkoutRequestId: string }>(
           "/api/mpesa/order-payment",
           {
@@ -257,30 +293,41 @@ export default function CheckoutPage() {
         );
 
         setCheckoutRequestId(mpesaData.checkoutRequestId);
-        // Polling will start via useEffect
       } else if (paymentMethod === "card") {
-        // Initialize Paystack payment for inline form
+        console.log("[v0] Initializing Paystack payment");
         const paystackData = await api.post<{
-          data: { accessCode: string; reference: string };
+          status: boolean;
+          data: {
+            reference: string;
+            authorizationUrl: string;
+            accessCode: string;
+          };
         }>("/api/payments/paystack-init", {
           orderId: orderData.order.id,
         });
 
-        if (paystackData.data?.accessCode && paystackData.data?.reference) {
-          setPaystackAccessCode(paystackData.data.accessCode);
-          setPaystackReference(paystackData.data.reference);
-          setStep("payment_card");
-          setLoading(false);
+        console.log("[v0] Paystack init response:", paystackData);
+
+        if (paystackData.data?.authorizationUrl) {
+          console.log("[v0] Redirecting to Paystack payment page");
+          // Store order ID for callback
+          localStorage.setItem("pending_order_id", orderData.order.id);
+          // Redirect to Paystack
+          window.location.href = paystackData.data.authorizationUrl;
         } else {
+          console.error("[v0] Paystack init failed - missing authorizationUrl");
           throw new Error("Failed to initialize Paystack payment");
         }
       } else if (paymentMethod === "cod") {
-        // COD - order already confirmed
-        clearCart();
-        setStep("success");
-        setLoading(false);
+        console.log("[v0] Processing COD order");
+        setTimeout(() => {
+          clearCart();
+          setStep("success");
+          setLoading(false);
+        }, 1500);
       }
     } catch (err: unknown) {
+      console.error("[v0] handlePayment error:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -288,71 +335,6 @@ export default function CheckoutPage() {
       );
       setStep("payment");
       setLoading(false);
-    }
-  };
-
-  const handleCardPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!paystackReference || !user?.email) {
-      setError("Payment initialization failed. Please try again.");
-      return;
-    }
-
-    try {
-      // Use Paystack's JavaScript library
-      if (!(window as any).PaystackPop) {
-        throw new Error("Paystack library not loaded");
-      }
-
-      const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-      if (!publicKey) {
-        throw new Error("Paystack public key not configured.");
-      }
-
-      const handler = (window as any).PaystackPop.setup({
-        key: publicKey,
-        email: user.email,
-        amount: Math.round(total * 100),
-        ref: paystackReference,
-        currency: "KES",
-        onClose: () => {
-          console.log("[v0] Payment window closed");
-        },
-        onSuccess: (response: { reference: string }) => {
-          console.log("[v0] Payment successful:", response.reference);
-          // Verify payment with backend
-          setLoading(true);
-          api
-            .get<{ success?: boolean; status?: boolean; message: string }>(
-              `/api/payments/paystack-verify?reference=${response.reference}&orderId=${orderId}`,
-            )
-            .then((verifyRes) => {
-              console.log("[v0] Verification response:", verifyRes);
-              if (verifyRes.success || verifyRes.status) {
-                clearCart();
-                setStep("success");
-              } else {
-                setError(verifyRes.message || "Payment verification failed");
-                setStep("payment_card");
-              }
-              setLoading(false);
-            })
-            .catch((err: unknown) => {
-              console.error("[v0] Verification error:", err);
-              setError(
-                err instanceof Error ? err.message : "Verification failed",
-              );
-              setStep("payment_card");
-              setLoading(false);
-            });
-        },
-      });
-
-      handler.openIframe();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Payment failed");
     }
   };
 
@@ -382,116 +364,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // Card payment - using Paystack popup
-  if (step === "payment_card") {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => setStep("payment")}
-            className="gap-2"
-            disabled={loading}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Payment Methods
-          </Button>
-        </div>
-
-        <div className="bg-white rounded-lg border border-border p-6 shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-1">
-              Card Payment
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Secure payment powered by Paystack
-            </p>
-          </div>
-
-          <form onSubmit={handleCardPayment} className="space-y-5">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-lg flex gap-2">
-                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Order Summary */}
-            <div className="bg-secondary/50 rounded-lg p-4 border border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Order Summary
-              </p>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground">Subtotal:</span>
-                  <span className="font-medium text-foreground">
-                    KES {subtotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-foreground">Delivery Fee:</span>
-                  <span className="font-medium text-foreground">
-                    KES {deliveryFee.toLocaleString()}
-                  </span>
-                </div>
-                <div className="border-t border-border pt-2 mt-3 flex justify-between">
-                  <span className="text-base font-bold text-foreground">
-                    Total Amount:
-                  </span>
-                  <span className="text-base font-bold text-ig-green">
-                    KES {total.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-              <p className="mb-2">
-                <span className="font-semibold">How it works:</span> Click the
-                button below to open Paystack's secure payment form.
-              </p>
-              <p>
-                Enter your card details there. Your card information is never
-                stored on our servers.
-              </p>
-            </div>
-
-            {/* Pay Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-ig-green hover:bg-ig-green/90 text-white h-12 font-semibold gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Processing Payment...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="h-5 w-5" />
-                  Pay KES {total.toLocaleString()}
-                </>
-              )}
-            </Button>
-
-            {/* Security Badge */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-3">
-              <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-blue-900">
-                <p className="font-semibold mb-1">Secure & Encrypted</p>
-                <p>
-                  Your payment is processed securely by Paystack. We never see
-                  your card details.
-                </p>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
   if (step === "success") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -527,7 +399,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Payment failed screen with retry option
   if (step === "failed") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -584,7 +455,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Processing screen
   if (step === "processing") {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -613,7 +483,7 @@ export default function CheckoutPage() {
         )}
         {paymentMethod === "card" && (
           <p className="text-muted-foreground">
-            Processing your card payment...
+            Redirecting to Paystack secure payment page...
           </p>
         )}
         {paymentMethod === "cod" && (
@@ -636,7 +506,6 @@ export default function CheckoutPage() {
       <h1 className="text-2xl font-bold text-foreground mb-8">Checkout</h1>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Forms */}
         <div className="flex-1">
           {step === "details" && (
             <div className="space-y-6">
@@ -651,7 +520,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* Delivery Area Dropdown */}
                 <div className="relative mb-4">
                   <Label className="text-foreground mb-1.5 block">
                     Select your area in Iten *
@@ -923,7 +791,6 @@ export default function CheckoutPage() {
                   })}
                 </div>
 
-                {/* M-Pesa Details */}
                 {paymentMethod === "mpesa" && (
                   <div className="bg-ig-green-light rounded-lg p-4 mb-6">
                     <Label className="text-foreground">
@@ -945,7 +812,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* COD Info */}
                 {paymentMethod === "cod" && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                     <div className="flex items-start gap-3">
@@ -989,7 +855,6 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* Order Summary Sidebar */}
         <div className="w-full lg:w-80">
           <div className="bg-white border border-border rounded-lg p-5 sticky top-24">
             <h3 className="font-bold text-foreground mb-4">Order Summary</h3>

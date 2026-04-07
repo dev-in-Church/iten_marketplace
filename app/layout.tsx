@@ -33,19 +33,20 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          src="https://js.paystack.co/v1/inline.js"
-          strategy="beforeInteractive"
-        />
-      </head>
       <body className="font-sans antialiased bg-background text-foreground">
         {children}
+
+        {/* Paystack Script
+        <Script
+          src="https://js.paystack.co/v1/inline.js"
+          strategy="afterInteractive"
+        /> */}
+
         <Analytics />
       </body>
     </html>
