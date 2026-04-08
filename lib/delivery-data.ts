@@ -142,7 +142,7 @@ export const PICKUP_STATION = ITEN_DELIVERY_AREAS.find(
 
 export function getDeliveryFee(areaId: string, subtotal: number): number {
   const area = ITEN_DELIVERY_AREAS.find((a) => a.id === areaId);
-  if (!area) return 300; // Default delivery fee
+  if (!area) return 0; // Default delivery fee(300)
   if (subtotal >= 5000) return 0; // Free delivery for orders over 5000
   return area.fee;
 }

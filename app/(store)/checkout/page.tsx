@@ -82,7 +82,7 @@ export default function CheckoutPage() {
   );
 
   const deliveryFee = useMemo(() => {
-    if (!selectedDeliveryArea) return 300;
+    if (!selectedDeliveryArea) return 0; //300 here
     if (subtotal >= 5000) return 0;
     return selectedDeliveryArea.fee;
   }, [selectedDeliveryArea, subtotal]);
