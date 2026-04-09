@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
+import {
+  ProductCard,
+  ProductCardSkeleton,
+  type Product,
+} from "@/components/product-card";
 import {
   HomeProductCard,
   HomeProductCardSkeleton,
 } from "@/components/home-product-card";
-import { MOCK_PRODUCTS, type Product } from "@/lib/mock-data";
 import { MOCK_CATEGORIES } from "@/lib/categories-panel";
 import { FEATURED_BRANDS } from "@/lib/delivery-data";
 import api from "@/lib/api";
@@ -51,6 +54,8 @@ export default function HomePage() {
   const newArrivalsSliderRef = useRef<HTMLDivElement>(null);
   const adidasSliderRef = useRef<HTMLDivElement>(null);
   const nikeSliderRef = useRef<HTMLDivElement>(null);
+  const garminSliderRef = useRef<HTMLDivElement>(null);
+  const asicsSliderRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState<Record<string, boolean>>(
     {},
@@ -76,6 +81,8 @@ export default function HomePage() {
       { key: "newArrivals", ref: newArrivalsSliderRef },
       { key: "adidas", ref: adidasSliderRef },
       { key: "nike", ref: nikeSliderRef },
+      { key: "garmin", ref: garminSliderRef },
+      { key: "asics", ref: asicsSliderRef },
     ];
 
     const listeners: {
@@ -103,22 +110,44 @@ export default function HomePage() {
     };
   }, [loading]);
 
+  // Fetch products with continuous retry - NO MOCK DATA FALLBACK
   useEffect(() => {
-    async function fetchProducts() {
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
+    let isRetrying = false;
+
+    const fetchProducts = async () => {
+      if (!mounted) return;
+
       try {
         const data = await api.get<{ products: Product[] }>("/api/products");
-        if (data.products && data.products.length > 0) {
+
+        if (mounted && data.products && data.products.length > 0) {
           setProducts(data.products);
-        } else {
-          setProducts(MOCK_PRODUCTS);
+          setLoading(false);
         }
-      } catch {
-        setProducts(MOCK_PRODUCTS);
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+
+        if (mounted && !isRetrying) {
+          isRetrying = true;
+          // Retry after 3 seconds - continue indefinitely
+          retryTimeout = setTimeout(() => {
+            isRetrying = false;
+            if (mounted) {
+              fetchProducts();
+            }
+          }, 3000);
+        }
       }
-    }
+    };
+
     fetchProducts();
+
+    return () => {
+      mounted = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, []);
 
   const nextSlide = useCallback(() => {
@@ -146,17 +175,21 @@ export default function HomePage() {
     }
   };
 
+  // Only compute these when products are loaded
   const featuredProducts = products.filter((p) => p.is_featured).slice(0, 8);
   const allProducts = products.slice(0, 12);
   const adidasProducts = products
     .filter((p) => p.brand?.toLowerCase() === "adidas")
     .slice(0, 9);
-
   const nikeProducts = products
     .filter((p) => p.brand?.toLowerCase() === "nike")
     .slice(0, 9);
-
-  console.log(nikeProducts);
+  const garminProducts = products
+    .filter((p) => p.brand?.toLowerCase() === "garmin")
+    .slice(0, 9);
+  const asicsProducts = products
+    .filter((p) => p.brand?.toLowerCase() === "asics")
+    .slice(0, 9);
 
   return (
     <div className="bg-secondary/30">
@@ -514,6 +547,204 @@ export default function HomePage() {
           </button>
         </div>
       </section>
+
+      {/* Nike Deals Slider */}
+      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="flex items-center justify-between mb-2 bg-red-600 text-white px-2 rounded-t-sm">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">Shop Nike</h2>
+          </div>
+          <Link
+            href="/products?brand=Nike"
+            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+          >
+            See All <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="relative flex items-center">
+          <button
+            onClick={() => scrollSlider(nikeSliderRef, "left")}
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollLeft["nike"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4 text-foreground" />
+          </button>
+
+          <div
+            ref={nikeSliderRef}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+          >
+            {loading ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : nikeProducts.length > 0 ? (
+              nikeProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">
+                No Nike products available at the moment.
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => scrollSlider(nikeSliderRef, "right")}
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollRight["nike"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+      </section> */}
+
+      {/* Garmin Deals Slider */}
+      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="flex items-center justify-between mb-2 bg-blue-600 text-white px-2 rounded-t-sm">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">Garmin Tech</h2>
+          </div>
+          <Link
+            href="/products?brand=Garmin"
+            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+          >
+            See All <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="relative flex items-center">
+          <button
+            onClick={() => scrollSlider(garminSliderRef, "left")}
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollLeft["garmin"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4 text-foreground" />
+          </button>
+
+          <div
+            ref={garminSliderRef}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+          >
+            {loading ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : garminProducts.length > 0 ? (
+              garminProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">
+                No Garmin products available at the moment.
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => scrollSlider(garminSliderRef, "right")}
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollRight["garmin"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+      </section> */}
+
+      {/* Asics Deals Slider */}
+      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="flex items-center justify-between mb-2 bg-green-600 text-white px-2 rounded-t-sm">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">Asics Performance</h2>
+          </div>
+          <Link
+            href="/products?brand=Asics"
+            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+          >
+            See All <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="relative flex items-center">
+          <button
+            onClick={() => scrollSlider(asicsSliderRef, "left")}
+            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollLeft["asics"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4 text-foreground" />
+          </button>
+
+          <div
+            ref={asicsSliderRef}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+          >
+            {loading ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : asicsProducts.length > 0 ? (
+              asicsProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">
+                No Asics products available at the moment.
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => scrollSlider(asicsSliderRef, "right")}
+            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+              canScrollRight["asics"] ? "flex" : "hidden"
+            }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+      </section> */}
 
       {/* Promo Banner - GIF */}
       <section className="hidden lg:block max-w-7xl mx-auto px-4 py-2">

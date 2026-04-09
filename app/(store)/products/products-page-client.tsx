@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, type Product } from "@/lib/mock-data";
+import {
+  ProductCard,
+  ProductCardSkeleton,
+  type Product,
+} from "@/components/product-card";
+import { MOCK_CATEGORIES } from "@/lib/mock-data"; // Only keep categories if needed
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,79 +41,53 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    async function load() {
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
+    let isRetrying = false;
+
+    const loadProducts = async () => {
+      if (!mounted) return;
+
       setLoading(true);
+
       try {
         const params: Record<string, string> = { limit: "50" };
         if (selectedCategory) params.category = selectedCategory;
         if (selectedBrand) params.brand = selectedBrand;
         if (searchQuery) params.search = searchQuery;
         if (sortBy) params.sort = sortBy;
+
         const data = await api.get<{ products: Product[] }>(
           "/api/products",
           params,
         );
-        if (data.products && data.products.length > 0) {
+
+        if (mounted && data.products) {
           setProducts(data.products);
-        } else {
-          let filtered = [...MOCK_PRODUCTS];
-          if (selectedCategory)
-            filtered = filtered.filter(
-              (p) => p.category_slug === selectedCategory,
-            );
-          if (selectedBrand)
-            filtered = filtered.filter(
-              (p) => p.brand?.toLowerCase() === selectedBrand.toLowerCase(),
-            );
-          if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            filtered = filtered.filter(
-              (p) =>
-                p.name.toLowerCase().includes(q) ||
-                p.brand?.toLowerCase().includes(q),
-            );
-          }
-          if (sortBy === "price_asc")
-            filtered.sort((a, b) => a.price - b.price);
-          else if (sortBy === "price_desc")
-            filtered.sort((a, b) => b.price - a.price);
-          else if (sortBy === "popular")
-            filtered.sort((a, b) => b.total_sold - a.total_sold);
-          else if (sortBy === "rating")
-            filtered.sort((a, b) => b.rating - a.rating);
-          setProducts(filtered);
+          setLoading(false);
         }
-      } catch {
-        let filtered = [...MOCK_PRODUCTS];
-        if (selectedCategory)
-          filtered = filtered.filter(
-            (p) => p.category_slug === selectedCategory,
-          );
-        if (selectedBrand)
-          filtered = filtered.filter(
-            (p) => p.brand?.toLowerCase() === selectedBrand.toLowerCase(),
-          );
-        if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          filtered = filtered.filter(
-            (p) =>
-              p.name.toLowerCase().includes(q) ||
-              p.brand?.toLowerCase().includes(q),
-          );
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+
+        if (mounted && !isRetrying) {
+          isRetrying = true;
+          // Retry after 3 seconds - continue indefinitely
+          retryTimeout = setTimeout(() => {
+            isRetrying = false;
+            if (mounted) {
+              loadProducts();
+            }
+          }, 3000);
         }
-        if (sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
-        else if (sortBy === "price_desc")
-          filtered.sort((a, b) => b.price - a.price);
-        else if (sortBy === "popular")
-          filtered.sort((a, b) => b.total_sold - a.total_sold);
-        else if (sortBy === "rating")
-          filtered.sort((a, b) => b.rating - a.rating);
-        setProducts(filtered);
-      } finally {
-        setLoading(false);
       }
-    }
-    load();
+    };
+
+    loadProducts();
+
+    return () => {
+      mounted = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, [selectedCategory, selectedBrand, searchQuery, sortBy]);
 
   return (
