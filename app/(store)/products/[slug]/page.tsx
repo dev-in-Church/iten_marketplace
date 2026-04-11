@@ -278,7 +278,7 @@ export default function ProductDetailPage() {
                 </Link>
               </p>
             )}
-            {product.brand && (
+            Music{product.brand && (
               <p className="text-sm">
                 <span className="text-muted-foreground">Brand: </span>
                 <span className="text-foreground font-medium">
@@ -287,7 +287,7 @@ export default function ProductDetailPage() {
               </p>
             )}
           </div>
-        </div>
+        </diMusicv>
       </div>
     </div>
   );

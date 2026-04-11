@@ -38,16 +38,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased bg-background text-foreground overflow-x-hidden max-w-full">
         {children}
-
-        {/* Paystack Script
-        <Script
-          src="https://js.paystack.co/v1/inline.js"
-          strategy="afterInteractive"
-        /> */}
-
-        <Analytics />
       </body>
     </html>
   );

@@ -195,7 +195,7 @@ export default function HomePage() {
     <div className="bg-secondary/30">
       {/* Hero Section */}
       <section className="">
-        <div className="max-w-7xl mx-auto p-1.5 md:p-4">
+        <div className="max-w-7xl mx-auto p-1.5 md:p-4 overflow-x-hidden">
           <div className="flex gap-2">
             {/* Left Column - Categories */}
             <div className="hidden lg:block w-56 shrink-0">
@@ -449,7 +449,7 @@ export default function HomePage() {
 
       {/* Categories Grid - Desktop */}
       <section className="hidden lg:block max-w-7xl mx-auto px-1 lg:px-4 my-2">
-        <div className="grid grid-cols-7 gap-6 bg-ig-green-light rounded-md py-3">
+        <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 bg-ig-green-light rounded-md py-3">
           {MOCK_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
@@ -755,7 +755,7 @@ export default function HomePage() {
               alt="Promotional offer"
               fill
               unoptimized
-              className="object-fit"
+              className="object-cover"
             />
           </div>
         </Link>
