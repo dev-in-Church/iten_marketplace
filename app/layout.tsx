@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "RunnerMKT - Sports Equipment Marketplace",
   description:
     "Kenya's leading multi-vendor sports equipment marketplace. Shop running shoes, football boots, gym equipment and more from verified vendors.",
+
+  manifest: "/manifest.json",
+
   keywords: [
     "sports",
     "equipment",
@@ -20,8 +23,16 @@ export const metadata: Metadata = {
     "football",
     "gym",
   ],
+
   icons: {
-    icon: "/images/icon.png",
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RunnerMKT",
   },
 };
 

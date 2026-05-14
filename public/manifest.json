@@ -1,0 +1,37 @@
+{
+  "name": "RunnerMKT",
+  "short_name": "RunnerMKT",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a7a2e",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "RunnerMKT Mobile"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "2560x1439",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "RunnerMKT Desktop"
+    }
+  ]
+}
