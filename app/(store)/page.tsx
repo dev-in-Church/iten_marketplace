@@ -348,7 +348,7 @@ export default function HomePage() {
 
       {/* Featured Products Slider */}
       <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="">
+        <div className="border-b">
           <div className="flex items-center justify-between mb-2 bg-ig-red text-white px-2 rounded-t-sm">
             <div>
               <h2 className="text-xl md:text-2xl font-bold">
@@ -484,67 +484,69 @@ export default function HomePage() {
 
       {/* Adidas Deals Slider */}
       <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-ig-black text-white px-2 rounded-t-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold">Best Of Adidas</h2>
-          </div>
-          <Link
-            href="/products?brand=Adidas"
-            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
-          >
-            See All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(adidasSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["adidas"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={adidasSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCardSkeleton />
-                </div>
-              ))
-            ) : adidasProducts.length > 0 ? (
-              adidasProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="w-[200px] sm:w-[220px] shrink-0 snap-start"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                No Adidas products available at the moment.
-              </p>
-            )}
+        <div className="border-b">
+          <div className="flex items-center justify-between mb-2 bg-ig-black text-white px-2 rounded-t-sm">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold">Best Of Adidas</h2>
+            </div>
+            <Link
+              href="/products?brand=Adidas"
+              className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+            >
+              See All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
 
-          <button
-            onClick={() => scrollSlider(adidasSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["adidas"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
+          <div className="relative flex items-center">
+            <button
+              onClick={() => scrollSlider(adidasSliderRef, "left")}
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollLeft["adidas"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div
+              ref={adidasSliderRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+            >
+              {loading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCardSkeleton />
+                  </div>
+                ))
+              ) : adidasProducts.length > 0 ? (
+                adidasProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="w-[200px] sm:w-[220px] shrink-0 snap-start"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-4">
+                  No Adidas products available at the moment.
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={() => scrollSlider(adidasSliderRef, "right")}
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollRight["adidas"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -763,59 +765,61 @@ export default function HomePage() {
 
       {/* New Arrivals Slider */}
       <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
-          <h2 className="text-xl md:text-2xl font-bold">New Arrivals</h2>
-          <Link
-            href="/products"
-            className="text-sm font-medium hover:underline flex items-center gap-1"
-          >
-            Browse All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(newArrivalsSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["newArrivals"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={newArrivalsSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading
-              ? Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="min-w-[200px] sm:min-w-[220px] snap-start"
-                  >
-                    <ProductCardSkeleton />
-                  </div>
-                ))
-              : allProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-[200px] sm:w-[220px] shrink-0 snap-start"
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
+        <div className="border-b">
+          <div className="flex items-center justify-between mb-2 bg-ig-green text-white px-2 rounded-t-sm">
+            <h2 className="text-xl md:text-2xl font-bold">New Arrivals</h2>
+            <Link
+              href="/products"
+              className="text-sm font-medium hover:underline flex items-center gap-1"
+            >
+              Browse All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
 
-          <button
-            onClick={() => scrollSlider(newArrivalsSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["newArrivals"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
+          <div className="relative flex items-center">
+            <button
+              onClick={() => scrollSlider(newArrivalsSliderRef, "left")}
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollLeft["newArrivals"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div
+              ref={newArrivalsSliderRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+            >
+              {loading
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="min-w-[200px] sm:min-w-[220px] snap-start"
+                    >
+                      <ProductCardSkeleton />
+                    </div>
+                  ))
+                : allProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="w-[200px] sm:w-[220px] shrink-0 snap-start"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+            </div>
+
+            <button
+              onClick={() => scrollSlider(newArrivalsSliderRef, "right")}
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollRight["newArrivals"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
         </div>
       </section>
     </div>

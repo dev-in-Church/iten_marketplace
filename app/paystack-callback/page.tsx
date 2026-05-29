@@ -11,8 +11,7 @@ function CallbackContent() {
 
   useEffect(() => {
     const reference = searchParams.get("reference");
-    const trxref = searchParams.get("trxref"); // Paystack sometimes uses this
-
+    const trxref = searchParams.get("trxref");
     const finalReference = reference || trxref;
 
     const verifyPayment = async () => {
