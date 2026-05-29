@@ -49,7 +49,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased bg-background text-foreground overflow-x-hidden max-w-full">
+      <body className="font-sans pt-34 antialiased bg-background text-foreground overflow-x-hidden max-w-full">
         {children}
       </body>
     </html>

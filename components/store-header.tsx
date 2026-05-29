@@ -44,7 +44,7 @@ export function StoreHeader() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <header className="sticky top-0 z-40">
+    <header className="fixed right-0 left-0 top-0 z-40">
       {/* Top bar */}
       <div className="bg-ig-black text-white text-xs">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
@@ -67,7 +67,7 @@ export function StoreHeader() {
       </div>
 
       {/* Main header */}
-      <div className="bg-white shadow-md">
+      <div className="bg-white shadow-md ">
         <div className="max-w-7xl mx-auto px-4 py-3 border-b border-ig-green-light">
           <div className="flex items-center gap-4">
             {/* Mobile menu toggle */}
@@ -127,7 +127,8 @@ export function StoreHeader() {
             {/* Right actions */}
             <div className="flex items-center gap-2 ml-auto">
               {/* Account */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
+                {" "}
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"

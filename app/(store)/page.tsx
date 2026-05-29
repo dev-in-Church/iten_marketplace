@@ -390,9 +390,9 @@ export default function HomePage() {
                 : featuredProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="min-w-[200px] sm:min-w-[220px] snap-start"
+                      className="w-[200px] sm:w-[220px] h-full shrink-0 snap-start"
                     >
-                      <HomeProductCard product={product} />
+                      <ProductCard product={product} />
                     </div>
                   ))}
             </div>
@@ -524,7 +524,7 @@ export default function HomePage() {
               adidasProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  className="w-[200px] sm:w-[220px] shrink-0 snap-start"
                 >
                   <ProductCard product={product} />
                 </div>
@@ -800,7 +800,7 @@ export default function HomePage() {
               : allProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                    className="w-[200px] sm:w-[220px] shrink-0 snap-start"
                   >
                     <ProductCard product={product} />
                   </div>

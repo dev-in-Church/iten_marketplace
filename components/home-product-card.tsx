@@ -16,6 +16,7 @@ export type Product = {
   thumbnail: string | null;
   currency: string;
   vendor_name: string | null;
+  vendorName: string | null;
   vendor_verified: boolean;
   rating: number;
   total_reviews: number;

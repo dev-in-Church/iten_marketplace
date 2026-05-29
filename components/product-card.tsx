@@ -60,10 +60,10 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Link href={`/products/${product.slug}`} className="group">
-      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
+    <Link href={`/products/${product.slug}`} className="group block h-full">
+      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[420px] flex flex-col">
         {/* Image */}
-        <div className="relative aspect-square bg-secondary overflow-hidden">
+        <div className="relative w-full h-[220px] bg-secondary overflow-hidden shrink-0">
           {product.thumbnail ? (
             <Image
               src={product.thumbnail}
@@ -77,11 +77,13 @@ export function ProductCard({ product }: { product: Product }) {
               No Image
             </div>
           )}
+
           {discount && (
             <span className="absolute top-2 left-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
-              {`-${discount}%`}
+              -{discount}%
             </span>
           )}
+
           {product.is_featured && (
             <span className="absolute top-2 right-2 bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded">
               FEATURED
@@ -90,26 +92,29 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Content */}
-        <div className="p-3 flex flex-col flex-1">
+        <div className="p-3 flex flex-col flex-1 min-h-0">
           {/* Vendor */}
-          {product.vendor_name && (
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-[11px] text-muted-foreground truncate">
-                {product.vendor_name}
-              </span>
-              {product.vendor_verified && (
-                <Check className="h-3.5 w-3.5 bg-ig-green text-white rounded-full shrink-0" />
-              )}
-            </div>
-          )}
+          <div className="h-5 mb-1">
+            {product.vendor_name && (
+              <div className="flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground truncate">
+                  {product.vendor_name}
+                </span>
+
+                {product.vendor_verified && (
+                  <Check className="h-3.5 w-3.5 bg-ig-green text-white rounded-full shrink-0" />
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Name */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1.5 flex-1">
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 min-h-[40px] group-hover:text-ig-green transition-colors">
             {product.name}
           </h3>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 mb-2">
+          <div className="flex items-center gap-1 h-5 mt-2">
             <div className="flex items-center">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
@@ -122,16 +127,18 @@ export function ProductCard({ product }: { product: Product }) {
                 />
               ))}
             </div>
+
             <span className="text-[10px] text-muted-foreground">
               ({product.total_reviews})
             </span>
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-2 mb-3">
+          <div className="flex items-baseline gap-2 min-h-[28px] mt-2">
             <span className="text-base font-bold text-ig-black">
               {formatPrice(product.price, product.currency)}
             </span>
+
             {product.compare_price && (
               <span className="text-xs text-muted-foreground line-through">
                 {formatPrice(product.compare_price, product.currency)}
@@ -139,10 +146,13 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          {/* Add to cart */}
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Button */}
           <Button
             size="sm"
-            className="w-full bg-ig-green hover:bg-ig-green/90 text-white gap-1.5"
+            className="w-full bg-ig-green hover:bg-ig-green/90 text-white gap-1.5 mt-3"
             onClick={handleAddToCart}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
