@@ -46,7 +46,7 @@ export function StoreHeader() {
   return (
     <header className="fixed right-0 left-0 top-0 z-40">
       {/* Top bar */}
-      <div className="bg-ig-black text-white text-xs">
+      <div className="bg-ig-green-light text-ig-green text-xs">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
           <p>Free delivery on orders above KES 5,000</p>
           <div className="hidden md:flex items-center gap-4">

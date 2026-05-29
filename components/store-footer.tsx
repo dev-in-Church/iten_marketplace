@@ -171,10 +171,18 @@ export function StoreFooter() {
                   Iten Town, Elgeyo Marakwet, Kenya
                 </span>
               </li>
-              <li className="flex items-center gap-2.5">
+              <li className="flex gap-2.5 items-start">
                 <Phone className="h-4 w-4 text-ig-green shrink-0" />
-                <span className="text-white/60 text-sm">+254 729 520 130</span>
+                <div className="flex flex-col">
+                  <span className="text-white/60 text-sm">
+                    +254 729 520 130
+                  </span>
+                  <span className="text-white/60 text-sm">
+                    +254 795 198 141
+                  </span>
+                </div>
               </li>
+
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 text-ig-green shrink-0" />
                 <span className="text-white/60 text-sm">
