@@ -3,12 +3,12 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-import { DM_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 
-const dmSans = DM_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
-
 export const metadata: Metadata = {
   title: "RunnerMKT - Sports Equipment Marketplace",
   description:
@@ -50,7 +50,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={dmSans.className}>
+    <html lang="en" className={outfit.variable}>
+      {" "}
       <body className="font-sans pt-34 antialiased bg-background text-foreground overflow-x-hidden max-w-full">
         {children}
       </body>
