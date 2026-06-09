@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-void inter;
+import { DM_Sans } from "next/font/google";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "RunnerMKT - Sports Equipment Marketplace",
@@ -48,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={dmSans.className}>
       <body className="font-sans pt-34 antialiased bg-background text-foreground overflow-x-hidden max-w-full">
         {children}
       </body>
