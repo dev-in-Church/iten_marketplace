@@ -2,18 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Search,
   ShoppingCart,
@@ -24,6 +17,8 @@ import {
   LogOut,
   Package,
   Heart,
+  HelpCircle,
+  MessageSquare,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -41,7 +36,41 @@ export function StoreHeader() {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const accountRef = useRef<HTMLDivElement>(null);
+  const helpRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns if clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
+      ) {
+        setAccountMenuOpen(false);
+      }
+      if (helpRef.current && !helpRef.current.contains(event.target as Node)) {
+        setHelpMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <header className="fixed right-0 left-0 top-0 z-40">
@@ -56,31 +85,21 @@ export function StoreHeader() {
             >
               Sell on RunnerMKT
             </Link>
-            <Link
-              href="/help"
-              className="hover:text-ig-green transition-colors"
-            >
-              Help
-            </Link>
           </div>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="bg-white shadow-md ">
-        <div className="max-w-7xl mx-auto px-4 py-3 border-b border-ig-green-light">
-          <div className="flex items-center gap-4">
+      <div className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-3 bg-amber-400">
+          <div className="flex items-center justify-between">
             {/* Mobile menu toggle */}
             <button
               className="md:hidden p-1"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(true)}
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              <Menu className="h-6 w-6" />
             </button>
 
             {/* Logo */}
@@ -96,122 +115,225 @@ export function StoreHeader() {
             </Link>
 
             {/* Search bar */}
-            <div className="hidden md:flex flex-1 max-w-xl">
-              <div className="relative w-full">
+            <div className="hidden md:flex flex-1 justify-center">
+              <div className="relative w-full max-w-xl flex items-center bg-[#F1F1F2] rounded-full p-1 pl-4 border border-transparent focus-within:border-gray-300">
+                <Search className="h-5 w-5 text-gray-700 flex-shrink-0" />
+
                 <Input
                   type="search"
-                  placeholder="Search for sports gear, shoes, equipment..."
+                  placeholder="Search products, brands and categories"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-12 bg-secondary border-border focus:border-ig-green focus:ring-ig-green"
+                  className="w-full bg-transparent border-none focus-visible:ring-0 shadow-none focus-visible:ring-offset-0 placeholder:text-gray-500 text-gray-800 h-10 pl-2 pr-24"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && searchQuery.trim()) {
                       window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
                     }
                   }}
                 />
+
                 <Button
                   size="sm"
-                  className="absolute right-0 top-0 h-full rounded-l-none bg-ig-green hover:bg-ig-green/90 text-white"
+                  className="absolute right-1 top-1 bottom-1 rounded-full bg-ig-green hover:bg-ig-green/90 text-white font-bold px-6 shadow-none h-auto"
                   onClick={() => {
                     if (searchQuery.trim()) {
                       window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
                     }
                   }}
                 >
-                  <Search className="h-4 w-4" />
+                  Search
                 </Button>
               </div>
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-2 ml-auto">
-              {/* Account */}
-              <DropdownMenu modal={false}>
-                {" "}
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-foreground"
-                  >
-                    <User className="h-5 w-5" />
-                    <span className="hidden md:inline text-sm">
-                      {user ? user.firstName : "Account"}
-                    </span>
-                    <ChevronDown className="h-3 w-3 hidden md:block" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-48 bg-white text-foreground"
+            <div className="flex items-center gap-1 md:gap-3 ml-auto">
+              {/* 1. Account Dropdown */}
+              <div className="relative" ref={accountRef}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-1.5 text-foreground font-medium select-none hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors ${accountMenuOpen ? "bg-[#EEEEEE]" : ""}`}
+                  onClick={() => {
+                    setAccountMenuOpen(!accountMenuOpen);
+                    setHelpMenuOpen(false);
+                  }}
                 >
-                  {user ? (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link href="/account" className="gap-2 cursor-pointer">
+                  <User className="h-5 w-5 stroke-[2]" />
+                  <span className="hidden md:inline text-[15px]">
+                    {user ? user.firstName : "Account"}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 hidden md:block transition-transform duration-200 ${accountMenuOpen ? "rotate-180" : ""}`}
+                  />
+                </Button>
+
+                {accountMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white text-foreground z-50 shadow-xl border border-gray-100 rounded-md py-1 flex flex-col">
+                    {user ? (
+                      <>
+                        <Link
+                          href="/account"
+                          className="gap-2 cursor-pointer w-full flex items-center px-4 py-2.5 text-sm hover:bg-neutral-100 transition-colors"
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
                           <User className="h-4 w-4" />
                           My Account
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link
                           href="/account/orders"
-                          className="gap-2 cursor-pointer"
+                          className="gap-2 cursor-pointer w-full flex items-center px-4 py-2.5 text-sm hover:bg-neutral-100 transition-colors"
+                          onClick={() => setAccountMenuOpen(false)}
                         >
                           <Package className="h-4 w-4" />
                           Orders
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link
                           href="/account/wishlist"
-                          className="gap-2 cursor-pointer"
+                          className="gap-2 cursor-pointer w-full flex items-center px-4 py-2.5 text-sm hover:bg-neutral-100 transition-colors"
+                          onClick={() => setAccountMenuOpen(false)}
                         >
                           <Heart className="h-4 w-4" />
                           Wishlist
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={logout}
-                        className="gap-2 cursor-pointer text-ig-red"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem asChild>
+                        <hr className="my-1 border-gray-100" />
+                        <button
+                          onClick={() => {
+                            logout();
+                            setAccountMenuOpen(false);
+                          }}
+                          className="gap-2 cursor-pointer text-ig-red w-full flex items-center px-4 py-2.5 text-sm hover:bg-neutral-100 text-left transition-colors font-medium"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
                         <Link
                           href="/auth/login"
-                          className="cursor-pointer font-medium"
+                          className="cursor-pointer font-medium w-full block px-4 py-2.5 text-sm hover:bg-neutral-100 transition-colors"
+                          onClick={() => setAccountMenuOpen(false)}
                         >
                           Sign In
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/auth/register" className="cursor-pointer">
+                        <Link
+                          href="/auth/register"
+                          className="cursor-pointer w-full block px-4 py-2.5 text-sm hover:bg-neutral-100 transition-colors"
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
                           Create Account
                         </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {/* Cart */}
+              {/* 2. Help Dropdown */}
+              <div className="relative" ref={helpRef}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-1.5 text-foreground font-medium select-none hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors ${helpMenuOpen ? "bg-[#EEEEEE]" : ""}`}
+                  onClick={() => {
+                    setHelpMenuOpen(!helpMenuOpen);
+                    setAccountMenuOpen(false);
+                  }}
+                >
+                  <HelpCircle className="h-5 w-5 stroke-[2]" />
+                  <span className="hidden md:inline text-[15px]">Help</span>
+                  <ChevronDown
+                    className={`h-4 w-4 hidden md:block transition-transform duration-200 ${helpMenuOpen ? "rotate-180" : ""}`}
+                  />
+                </Button>
+
+                {helpMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 z-50 shadow-2xl border border-gray-100 rounded-md py-2 flex flex-col">
+                    <Link
+                      href="/help"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Help Center
+                    </Link>
+                    <Link
+                      href="/help/place-order"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Place your Order
+                    </Link>
+                    <Link
+                      href="/help/payment-options"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Payment Options
+                    </Link>
+                    <Link
+                      href="/help/track-order"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Delivery Timelines & Track your Order
+                    </Link>
+                    <Link
+                      href="/help/returns"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Returns & Refunds
+                    </Link>
+                    <Link
+                      href="/help/warranty"
+                      className="w-full px-4 py-2 text-[14px] hover:bg-neutral-50 transition-colors mb-2"
+                      onClick={() => setHelpMenuOpen(false)}
+                    >
+                      Warranty
+                    </Link>
+
+                    <hr className="mx-4 my-1 border-gray-100" />
+
+                    <div className="p-3 pt-2 space-y-2">
+                      <Link
+                        href="/chat"
+                        className="w-full bg-ig-green hover:bg-ig-green/90 text-white font-bold h-10 rounded flex items-center justify-center gap-2 text-sm transition-colors shadow-sm"
+                        onClick={() => setHelpMenuOpen(false)}
+                      >
+                        <MessageSquare className="h-4 w-4 fill-white" />
+                        Live Chat
+                      </Link>
+                      <Link
+                        href="https://wa.me/yournumber"
+                        target="_blank"
+                        className="w-full bg-white hover:bg-neutral-50 text-[#25D366] font-bold h-10 rounded border border-[#25D366] flex items-center justify-center gap-2 text-sm transition-colors"
+                        onClick={() => setHelpMenuOpen(false)}
+                      >
+                        <svg
+                          className="h-5 w-5 fill-[#25D366]"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397 0 11.966 0c3.179.001 6.169 1.24 8.413 3.488 2.245 2.248 3.481 5.239 3.481 8.42 0 6.607-5.337 11.954-11.966 11.954-2.001-.001-3.973-.5-5.74-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.742.002-2.602-1.01-5.05-2.85-6.892-1.84-1.842-4.29-2.856-6.891-2.858-5.44 0-9.863 4.37-9.867 9.743-.001 1.73.475 3.42 1.378 4.917l-.983 3.591 3.724-.969z" />
+                        </svg>
+                        WhatsApp
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Cart */}
               <Link href="/cart">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 relative text-foreground"
+                  className="relative gap-1.5 text-foreground font-medium hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors"
                 >
-                  <ShoppingCart className="h-5 w-5" />
-                  <span className="hidden md:inline text-sm">Cart</span>
+                  <ShoppingCart className="h-5 w-5 stroke-[2]" />
+                  <span className="hidden md:inline text-[15px]">Cart</span>
                   {count > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-ig-red text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-ig-green text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
                       {count > 99 ? "99+" : count}
                     </span>
                   )}
@@ -237,7 +359,7 @@ export function StoreHeader() {
               />
               <Button
                 size="sm"
-                className="absolute right-0 top-0 h-full rounded-l-none bg-ig-green hover:bg-ig-green/90 text-white"
+                className="absolute right-0 top-0 h-full rounded-l-none bg-ig-green text-white"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -264,11 +386,40 @@ export function StoreHeader() {
         </nav>
       </div>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-border shadow-lg">
-          <nav className="max-w-7xl mx-auto px-4 py-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+      {/* Slide-out Mobile Sidebar Drawer Container */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${
+          mobileMenuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
+        {/* Dark Backdrop Tint */}
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+
+        {/* Slide-out White Drawer panel */}
+        <div
+          className={`absolute top-0 bottom-0 left-0 w-72 max-w-[80vw] bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {/* Drawer Top Header Row */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+            <span className="font-bold text-gray-900 text-lg">Menu</span>
+            <button
+              className="p-1 hover:bg-neutral-100 rounded-full transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <X className="h-6 w-6 text-gray-500" />
+            </button>
+          </div>
+
+          {/* Drawer Scrollable Content Layout */}
+          <nav className="flex-1 overflow-y-auto px-4 py-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
               Categories
             </p>
             <ul className="space-y-1">
@@ -276,7 +427,7 @@ export function StoreHeader() {
                 <li key={cat.slug}>
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className="block px-3 py-2 rounded-md text-sm hover:bg-ig-green-light transition-colors text-foreground"
+                    className="block px-3 py-2 rounded-md text-sm hover:bg-ig-green-light transition-colors text-foreground font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {cat.name}
@@ -284,6 +435,7 @@ export function StoreHeader() {
                 </li>
               ))}
             </ul>
+
             <div className="border-t border-border mt-4 pt-4 space-y-1">
               <Link
                 href="https://vendorcenter.sporttechies.com/"
@@ -295,7 +447,7 @@ export function StoreHeader() {
             </div>
           </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 }

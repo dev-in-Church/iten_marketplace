@@ -296,7 +296,7 @@ export default function HomePage() {
             </div>
 
             {/* Right Column - Brands */}
-            <div className="hidden lg:block w-70 shrink-0">
+            <div className="hidden lg:block w-68 shrink-0">
               <div className="bg-white rounded-sm shadow-sm shadow-ig-green-light overflow-hidden h-full">
                 <div className="bg-ig-black text-white px-4 py-3 font-semibold text-sm">
                   Top Brands
