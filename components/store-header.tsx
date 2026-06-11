@@ -77,7 +77,7 @@ export function StoreHeader() {
       {/* Top bar */}
       <div className="bg-ig-green-light text-ig-green text-xs">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
-          <p>Free delivery on orders above KES 5,000</p>
+          <p>Free delivery on orders above Within Iten</p>
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="https://vendorcenter.sporttechies.com/"
@@ -343,25 +343,36 @@ export function StoreHeader() {
           </div>
 
           {/* Mobile search */}
-          <div className="md:hidden mt-3">
-            <div className="relative w-full">
+          <div className="md:hidden mt-3 px-1">
+            <div className="relative w-full flex items-center bg-[#F1F1F2] rounded-full p-1 border border-neutral-200/60 focus-within:ring-1 focus-within:ring-ig-green/90 focus-within:border-ig-green transition-all">
+              {/* Search Icon on the Left */}
+              <Search className="absolute left-4 h-4 w-4 text-neutral-400 pointer-events-none" />
+
+              {/* Capsule Input Field */}
               <Input
                 type="search"
-                placeholder="Search products..."
+                placeholder="Search products, brands and categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-12 bg-secondary border-border"
+                className="w-full pl-10 pr-24 bg-transparent border-none shadow-none h-8 text-xs text-foreground placeholder:text-neutral-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && searchQuery.trim()) {
                     window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
                   }
                 }}
               />
+
+              {/* pill Button on the Right */}
               <Button
                 size="sm"
-                className="absolute right-0 top-0 h-full rounded-l-none bg-ig-green text-white"
+                onClick={() => {
+                  if (searchQuery.trim()) {
+                    window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
+                  }
+                }}
+                className="absolute right-1 top-1 bottom-1 rounded-full bg-ig-green hover:bg-ig-green/90 text-white font-bold text-xs px-4 shadow-sm transition-colors"
               >
-                <Search className="h-4 w-4" />
+                Search
               </Button>
             </div>
           </div>

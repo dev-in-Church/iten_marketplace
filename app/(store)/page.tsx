@@ -65,8 +65,8 @@ export default function HomePage() {
   );
 
   const updateScrollButtons = (key: string, el: HTMLDivElement) => {
-    const newLeft = el.scrollLeft > 0;
-    const newRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    const newLeft = el.scrollLeft > 2;
+    const newRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 5;
     setCanScrollLeft((prev) =>
       prev[key] === newLeft ? prev : { ...prev, [key]: newLeft },
     );
@@ -91,18 +91,32 @@ export default function HomePage() {
       onResize: () => void;
     }[] = [];
 
-    sliders.forEach(({ key, ref }) => {
-      const el = ref.current;
-      if (!el) return;
-      updateScrollButtons(key, el);
-      const onScroll = () => updateScrollButtons(key, el);
-      const onResize = () => updateScrollButtons(key, el);
-      el.addEventListener("scroll", onScroll);
-      window.addEventListener("resize", onResize);
-      listeners.push({ el, onScroll, onResize });
-    });
+    const timeoutId = setTimeout(() => {
+      sliders.forEach(({ key, ref }) => {
+        const el = ref.current;
+        if (!el) return;
+        updateScrollButtons(key, el);
+
+        let ticking = false;
+        const onScroll = () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              updateScrollButtons(key, el);
+              ticking = false;
+            });
+            ticking = true;
+          }
+        };
+        const onResize = () => updateScrollButtons(key, el);
+
+        el.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onResize, { passive: true });
+        listeners.push({ el, onScroll, onResize });
+      });
+    }, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       listeners.forEach(({ el, onScroll, onResize }) => {
         el.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onResize);
@@ -110,7 +124,6 @@ export default function HomePage() {
     };
   }, [loading]);
 
-  // Fetch products with continuous retry - NO MOCK DATA FALLBACK
   useEffect(() => {
     let mounted = true;
     let retryTimeout: NodeJS.Timeout;
@@ -131,7 +144,6 @@ export default function HomePage() {
 
         if (mounted && !isRetrying) {
           isRetrying = true;
-          // Retry after 3 seconds - continue indefinitely
           retryTimeout = setTimeout(() => {
             isRetrying = false;
             if (mounted) {
@@ -169,13 +181,12 @@ export default function HomePage() {
   ) => {
     if (ref.current) {
       ref.current.scrollBy({
-        left: direction === "left" ? -300 : 300,
+        left: direction === "left" ? -400 : 400,
         behavior: "smooth",
       });
     }
   };
 
-  // Only compute these when products are loaded
   const featuredProducts = products.filter((p) => p.is_featured).slice(0, 8);
   const allProducts = products.slice(0, 12);
   const adidasProducts = products
@@ -192,7 +203,7 @@ export default function HomePage() {
     .slice(0, 9);
 
   return (
-    <div className="bg-secondary/30">
+    <div className="bg-secondary/30 min-h-screen pb-12 antialiased">
       {/* Hero Section */}
       <section className="">
         <div className="max-w-7xl mx-auto p-1.5 md:p-4 overflow-x-hidden">
@@ -329,7 +340,7 @@ export default function HomePage() {
               <Link
                 key={brand.id}
                 href={`/products?brand=${encodeURIComponent(brand.name)}`}
-                className="flex-shrink-0 flex  items-center gap-2 group"
+                className="flex-shrink-0 flex items-center gap-2 group"
               >
                 <div className="w-16 h-16 p-2 rounded-sm overflow-hidden shadow-sm transition-all group-hover:scale-105">
                   <Image
@@ -449,31 +460,23 @@ export default function HomePage() {
 
       {/* Categories Grid - Desktop */}
       <section className="hidden lg:block max-w-7xl mx-auto px-1 lg:px-4 my-2">
-        <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 bg-ig-green-light rounded-md py-3">
+        <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 bg-ig-green-light rounded-md py-4 shadow-sm border border-neutral-100">
           {MOCK_CATEGORIES.map((cat) => (
             <Link
               key={cat.slug}
               href={`/products?category=${cat.slug}`}
               className="flex flex-col items-center gap-3 group"
             >
-              <div
-                className="w-32 h-32 rounded-full overflow-hidden ring-2 ring-border
-          group-hover:ring-ig-green transition-all shadow-md
-          group-hover:scale-105
-          will-change-transform [transform:translateZ(0)]"
-              >
-                {" "}
-                {/* ← ADD THIS */}
+              <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-neutral-200 group-hover:ring-ig-green transition-all duration-200 ease-out shadow-sm group-hover:scale-105 bg-white relative">
                 <Image
                   src={cat.image_url}
                   alt={cat.name}
-                  width={112}
-                  height={112}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover p-0.5 rounded-full"
                 />
               </div>
               <div className="text-center">
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-xs font-bold text-neutral-700 group-hover:text-ig-green transition-colors truncate max-w-[110px]">
                   {cat.name}
                 </h3>
               </div>
@@ -531,7 +534,7 @@ export default function HomePage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground py-4">
+                <p className="text-sm text-muted-foreground py-4 px-2">
                   No Adidas products available at the moment.
                 </p>
               )}
@@ -551,215 +554,240 @@ export default function HomePage() {
       </section>
 
       {/* Nike Deals Slider */}
-      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-red-600 text-white px-2 rounded-t-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold">Shop Nike</h2>
-          </div>
-          <Link
-            href="/products?brand=Nike"
-            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
-          >
-            See All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(nikeSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["nike"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={nikeSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCardSkeleton />
-                </div>
-              ))
-            ) : nikeProducts.length > 0 ? (
-              nikeProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                No Nike products available at the moment.
-              </p>
-            )}
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="border-b">
+          <div className="flex items-center justify-between mb-2 bg-neutral-900 text-white px-2 rounded-t-sm border-l-4 border-orange-500">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight text-neutral-100">
+                Official Nike Hub
+              </h2>
+            </div>
+            <Link
+              href="/products?brand=Nike"
+              className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1 text-orange-400"
+            >
+              See All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
 
-          <button
-            onClick={() => scrollSlider(nikeSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["nike"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
+          <div className="relative flex items-center">
+            <button
+              onClick={() => scrollSlider(nikeSliderRef, "left")}
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollLeft["nike"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div
+              ref={nikeSliderRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+            >
+              {loading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCardSkeleton />
+                  </div>
+                ))
+              ) : nikeProducts.length > 0 ? (
+                nikeProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 px-2">
+                  No Nike products available at the moment.
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={() => scrollSlider(nikeSliderRef, "right")}
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollRight["nike"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Garmin Deals Slider */}
-      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-blue-600 text-white px-2 rounded-t-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold">Garmin Tech</h2>
-          </div>
-          <Link
-            href="/products?brand=Garmin"
-            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
-          >
-            See All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(garminSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["garmin"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={garminSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCardSkeleton />
-                </div>
-              ))
-            ) : garminProducts.length > 0 ? (
-              garminProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                No Garmin products available at the moment.
-              </p>
-            )}
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="border-b">
+          <div className="flex items-center justify-between mb-2 bg-blue-700 text-white px-2 rounded-t-sm">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold">
+                Official Garmin Hub
+              </h2>
+            </div>
+            <Link
+              href="/products?brand=Garmin"
+              className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+            >
+              See All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
 
-          <button
-            onClick={() => scrollSlider(garminSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["garmin"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
+          <div className="relative flex items-center">
+            <button
+              onClick={() => scrollSlider(garminSliderRef, "left")}
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollLeft["garmin"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div
+              ref={garminSliderRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+            >
+              {loading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCardSkeleton />
+                  </div>
+                ))
+              ) : garminProducts.length > 0 ? (
+                garminProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="w-[200px] sm:w-[220px] shrink-0 snap-start"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 px-2">
+                  No Garmin products available at the moment.
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={() => scrollSlider(adidasSliderRef, "right")}
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollRight["adidas"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Asics Deals Slider */}
-      {/* <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-        <div className="flex items-center justify-between mb-2 bg-green-600 text-white px-2 rounded-t-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold">Asics Performance</h2>
+      <section className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
+        <div className="border-b">
+          <div className="flex items-center justify-between mb-2 bg-gradient-to-r from-blue-600 to-indigo-800 text-white px-2 rounded-t-sm">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold">
+                Official Asics Hub
+              </h2>
+            </div>
+            <Link
+              href="/products?brand=Asics"
+              className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
+            >
+              See All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-          <Link
-            href="/products?brand=Asics"
-            className="hidden sm:flex text-sm font-medium hover:underline items-center gap-1"
-          >
-            See All <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+
+          <div className="relative flex items-center">
+            <button
+              onClick={() => scrollSlider(asicsSliderRef, "left")}
+              className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollLeft["asics"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground" />
+            </button>
+
+            <div
+              ref={asicsSliderRef}
+              className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
+            >
+              {loading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCardSkeleton />
+                  </div>
+                ))
+              ) : asicsProducts.length > 0 ? (
+                asicsProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="min-w-[200px] sm:min-w-[220px] snap-start"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 px-2">
+                  No Asics products available at the moment.
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={() => scrollSlider(asicsSliderRef, "right")}
+              className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
+                canScrollRight["asics"] ? "flex" : "hidden"
+              }`}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4 text-foreground" />
+            </button>
+          </div>
         </div>
+      </section>
 
-        <div className="relative flex items-center">
-          <button
-            onClick={() => scrollSlider(asicsSliderRef, "left")}
-            className={`hidden lg:absolute left-0 -translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollLeft["asics"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
-          </button>
-
-          <div
-            ref={asicsSliderRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory w-full"
-          >
-            {loading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCardSkeleton />
-                </div>
-              ))
-            ) : asicsProducts.length > 0 ? (
-              asicsProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[200px] sm:min-w-[220px] snap-start"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                No Asics products available at the moment.
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={() => scrollSlider(asicsSliderRef, "right")}
-            className={`hidden lg:absolute right-0 translate-x-1/2 z-10 p-2 rounded-full bg-white border border-border hover:border-ig-green transition-colors shadow-sm ${
-              canScrollRight["asics"] ? "flex" : "hidden"
-            }`}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-4 w-4 text-foreground" />
-          </button>
-        </div>
-      </section> */}
-
-      {/* Promo Banner - GIF */}
-      <section className="hidden lg:block max-w-7xl mx-auto px-4 py-2">
-        <Link href="/products?category=running">
-          <div className="relative rounded-sm h-[260px] overflow-hidden w-full border aspect-[3/1] bg-gray-100">
-            <Image
-              src="/images/banner.gif"
-              alt="Promotional offer"
-              fill
-              unoptimized
-              className="object-cover"
-            />
-          </div>
+      {/* Jumia Double-Sided Promo Banners */}
+      <section className="hidden md:grid grid-cols-2 max-w-7xl mx-auto px-4 gap-4 py-4">
+        <Link
+          href="/products?category=running"
+          className="relative h-[160px] overflow-hidden rounded-sm border border-neutral-200 shadow-sm bg-gray-100 group transition-opacity hover:opacity-95"
+        >
+          <Image
+            src="/images/banner.gif"
+            alt="Running Deals Banner"
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        </Link>
+        <Link
+          href="/products?featured=true"
+          className="relative h-[160px] overflow-hidden rounded-sm border border-neutral-200 shadow-sm bg-gray-100 group transition-opacity hover:opacity-95"
+        >
+          <Image
+            src="/images/banner.gif"
+            alt="Premium Tech Gear Banner"
+            fill
+            unoptimized
+            className="object-cover"
+          />
         </Link>
       </section>
 
@@ -822,6 +850,148 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/*Marketplace Context SEO Panel */}
+      <StoreSEOText />
     </div>
+  );
+}
+
+function StoreSEOText() {
+  return (
+    <section className="bg-white border-t border-neutral-200 mt-12 py-10 text-neutral-700">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="space-y-6 max-w-none prose prose-sm prose-neutral">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-neutral-900 mb-2">
+              RunnerMKT - Kenya's Leading Online Sports & Fitness Marketplace
+            </h1>
+            <h2 className="text-sm md:text-base font-semibold text-neutral-800 mb-2">
+              Welcome to the ultimate destination for sports gear and apparel!
+            </h2>
+            <p className="text-xs md:text-sm text-neutral-600 leading-relaxed">
+              Our e-commerce platform is built to revolutionize your athletic
+              shopping experience across Kenya. Whether you are on the hunt for
+              high-end fitness tracking technology, professional running shoes,
+              or essential strength equipment, we've got you covered. Skip the
+              stress of navigating crowded local malls—enjoy premium shopping
+              convenience from Nairobi, Mombasa, Kisumu, Nakuru, Eldoret, and
+              all across the country.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 text-xs md:text-sm text-neutral-600">
+            <div>
+              <h3 className="font-bold text-neutral-800 text-sm md:text-base mb-1">
+                Best Prices, Authentic Brands & Diverse Categories
+              </h3>
+              <p className="leading-relaxed">
+                We bridge the gap between verified local vendors and athletes,
+                ensuring you get maximum value for your money. Explore deep
+                catalogs featuring functional fitness tech, lightweight training
+                tees, durable water bottles, and protective gym accessories.
+                Shop directly from world-renowned brands such as{" "}
+                <Link
+                  href="/products?brand=Adidas"
+                  className="text-ig-green hover:underline font-medium"
+                >
+                  Adidas
+                </Link>
+                ,{" "}
+                <Link
+                  href="/products?brand=Nike"
+                  className="text-ig-green hover:underline font-medium"
+                >
+                  Nike
+                </Link>
+                ,{" "}
+                <Link
+                  href="/products?brand=Asics"
+                  className="text-ig-green hover:underline font-medium"
+                >
+                  Asics
+                </Link>
+                , and{" "}
+                <Link
+                  href="/products?brand=Garmin"
+                  className="text-ig-green hover:underline font-medium"
+                >
+                  Garmin
+                </Link>{" "}
+                with guaranteed quality assurance.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-neutral-800 text-sm md:text-base mb-1">
+                Exceptional Delivery & Support Systems
+              </h3>
+              <p className="leading-relaxed">
+                Get premium items delivered securely to your doorstep. We
+                coordinate with fast logistics channels to guarantee quick
+                timelines. Purchases above KES 5,000 enjoy free shipping! Need
+                assistance tracking a package, checking item warranties, or
+                managing custom team orders? Contact our live support system or
+                drop us a message instantly via WhatsApp using our header help
+                links.
+              </p>
+            </div>
+          </div>
+
+          <hr className="border-neutral-200 my-6" />
+
+          <div>
+            <h3 className="text-sm md:text-base font-bold text-neutral-900 mb-4">
+              Frequently Asked Questions (FAQs)
+            </h3>
+            <div className="space-y-4 text-xs md:text-sm">
+              <div>
+                <p className="font-semibold text-neutral-800">
+                  1. How do I place an order?
+                </p>
+                <p className="text-neutral-600">
+                  Finding and ordering gear is simple: search or browse
+                  categories, add your favorite products to your shopping cart,
+                  and follow checkout prompts to complete your secure delivery
+                  details.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">
+                  2. What payment methods do you support?
+                </p>
+                <p className="text-neutral-600">
+                  We accept Lipa na M-PESA Paybill transactions, verified
+                  Credit/Debit Cards (Visa/Mastercard), and traditional secure
+                  checkout integrations tailored for regional Kenyan customers.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">
+                  3. How long does shipping take?
+                </p>
+                <p className="text-neutral-600">
+                  Standard deliveries within Iten & Eldoret take 3 to 12 working
+                  hours. Upcountry orders across other major cities and towns
+                  take between 2 to 4 business days depending on localized
+                  vendor dispatch configurations.
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">
+                  4. Can I sell items on RunnerMKT?
+                </p>
+                <p className="text-neutral-600">
+                  Yes! If you are an authorized distributor, independent gym
+                  equipment supplier, or fitness merchant in Kenya, click 'Sell
+                  on RunnerMKT' at the top bar to set up your store vendor
+                  portal profile.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
