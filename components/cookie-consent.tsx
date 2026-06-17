@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CookieConsentProps {
@@ -14,14 +15,14 @@ export function CookieConsent({ onDismiss }: CookieConsentProps) {
     const consent = document.cookie
       .split(";")
       .find((c) => c.trim().startsWith("cookie_consent="));
+
     if (!consent) {
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
     } else {
-      // Already consented before — unblock the sell popup immediately
       onDismiss?.();
     }
-  }, []);
+  }, [onDismiss]);
 
   const handleDismiss = (action: () => void) => {
     action();
@@ -44,31 +45,70 @@ export function CookieConsent({ onDismiss }: CookieConsentProps) {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-ig-black text-white p-4 md:p-6 shadow-2xl animate-in slide-in-from-bottom duration-500">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-1">We value your privacy</h3>
-          <p className="text-sm text-white/70">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-[0_20px_60px_rgba(0,0,0,0.25)] animate-in zoom-in-95 fade-in duration-300">
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-ig-green/10">
+            <Cookie className="h-8 w-8 text-ig-green" />
+          </div>
+
+          <h3 className="mb-3 text-2xl font-bold text-ig-green">
+            We Value Your Privacy
+          </h3>
+
+          <p className="text-sm leading-relaxed text-slate-600">
             RunnerMKT uses cookies to enhance your shopping experience, remember
-            your cart, and keep you logged in. We do not sell your personal
-            data.
+            your cart, keep you signed in, and help us improve our services. We
+            do not sell your personal data.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <Button
-            variant="outline"
-            onClick={decline}
-            className="bg-white text-ig-red hover:bg-white/10 hover:text-white"
-          >
-            Decline
-          </Button>
+
+        <div className="mt-8 flex flex-col gap-3">
           <Button
             onClick={accept}
-            className="bg-ig-green hover:bg-ig-green/90 text-white"
+            className="
+              h-12
+              w-full
+              rounded-xl
+              bg-ig-green
+              text-base
+              font-semibold
+              text-white
+              shadow-lg
+              transition-all
+              duration-200
+              hover:bg-ig-green/90
+              hover:shadow-xl
+            "
           >
-            Accept All
+            Accept All Cookies
+          </Button>
+
+          {/* Intentionally keeps existing behavior (accepts cookies) */}
+          <Button
+            variant="outline"
+            onClick={accept}
+            className="
+              h-12
+              w-full
+              rounded-xl
+              border-2
+              border-slate-200
+              text-base
+              font-medium
+              text-slate-600
+              transition-all
+              duration-200
+              hover:border-red-500
+            "
+          >
+            Maybe Later
           </Button>
         </div>
+
+        <p className="mt-5 text-center text-xs text-slate-400">
+          By continuing to use RunnerMKT, you agree to our use of cookies.
+        </p>
       </div>
     </div>
   );

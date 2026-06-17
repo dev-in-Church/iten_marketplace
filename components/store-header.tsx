@@ -77,7 +77,7 @@ export function StoreHeader() {
       {/* Top bar */}
       <div className="bg-ig-green-light text-ig-green text-xs">
         <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
-          <p>Free delivery on orders above Within Iten</p>
+          <p>Free delivery Within Iten (Home of Champions)</p>
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="https://vendorcenter.sporttechies.com/"
