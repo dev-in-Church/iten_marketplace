@@ -9,7 +9,15 @@ import { GoogleLoginButton } from "@/components/google-login-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,6 +34,7 @@ export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -52,7 +61,8 @@ export default function RegisterPage() {
         phone: form.phone,
         password: form.password,
       });
-      router.push("/");
+      // Email verification required - don't auto-login
+      setVerified(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -78,7 +88,7 @@ export default function RegisterPage() {
       <Link href="/" className="mb-8">
         <Image
           src="/images/logo.png"
-          alt="RunnerMKT"
+          alt="ItenGear"
           width={160}
           height={56}
           className="h-14 w-auto"
@@ -86,168 +96,204 @@ export default function RegisterPage() {
       </Link>
 
       <div className="w-full max-w-md bg-white rounded-xl border border-border shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-foreground text-center mb-1">
-          Create Your Account
-        </h1>
-        <p className="text-sm text-muted-foreground text-center mb-6">
-          Join RunnerMKT and start shopping
-        </p>
-
+        {!verified ? (
+          <>
+            <h1 className="text-2xl font-bold text-foreground text-center mb-1">
+              Create Your Account
+            </h1>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              Join ItenGear and start shopping
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex justify-center mb-4">
+              <CheckCircle2 className="h-12 w-12 text-green-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground text-center mb-1">
+              Account Created!
+            </h1>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              Check your email to verify your account
+            </p>
+          </>
+        )}
         {error && (
           <div className="bg-ig-red-light text-ig-red text-sm p-3 rounded-lg mb-4">
             {error}
           </div>
         )}
+        {verified && (
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg mb-6">
+            <p className="font-medium">Verification email sent!</p>
+            <p className="text-xs mt-1">
+              Click the link in your email to verify your account, then log in.
+            </p>
+          </div>
+        )}
+        {!verified && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="firstName" className="text-foreground">
+                  First Name
+                </Label>
+                <div className="relative mt-1.5">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="firstName"
+                    placeholder="John"
+                    value={form.firstName}
+                    onChange={(e) => update("firstName", e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="lastName" className="text-foreground">
+                  Last Name
+                </Label>
+                <div className="relative mt-1.5">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="lastName"
+                    placeholder="Doe"
+                    value={form.lastName}
+                    onChange={(e) => update("lastName", e.target.value)}
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="firstName" className="text-foreground">
-                First Name
+              <Label htmlFor="email" className="text-foreground">
+                Email
               </Label>
               <div className="relative mt-1.5">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="firstName"
-                  placeholder="John"
-                  value={form.firstName}
-                  onChange={(e) => update("firstName", e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
                   required
                   className="pl-10"
                 />
               </div>
             </div>
+
             <div>
-              <Label htmlFor="lastName" className="text-foreground">
-                Last Name
+              <Label htmlFor="phone" className="text-foreground">
+                Phone Number
               </Label>
               <div className="relative mt-1.5">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="lastName"
-                  placeholder="Doe"
-                  value={form.lastName}
-                  onChange={(e) => update("lastName", e.target.value)}
+                  id="phone"
+                  type="tel"
+                  placeholder="0700000000"
+                  value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="password" className="text-foreground">
+                Password
+              </Label>
+              <div className="relative mt-1.5">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPw ? "text" : "password"}
+                  placeholder="Min. 6 characters"
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  required
+                  className="pl-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPw ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword" className="text-foreground">
+                Confirm Password
+              </Label>
+              <div className="relative mt-1.5">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repeat password"
+                  value={form.confirmPassword}
+                  onChange={(e) => update("confirmPassword", e.target.value)}
                   required
                   className="pl-10"
                 />
               </div>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="email" className="text-foreground">
-              Email
-            </Label>
-            <div className="relative mt-1.5">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={(e) => update("email", e.target.value)}
-                required
-                className="pl-10"
-              />
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-ig-green hover:bg-ig-green/90 text-white font-semibold"
+            >
+              {loading ? "Creating Account..." : "Create Account"}
+            </Button>
+          </form>
+        )}{" "}
+        {!verified && (
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-3 text-muted-foreground">OR</span>
             </div>
           </div>
-
-          <div>
-            <Label htmlFor="phone" className="text-foreground">
-              Phone Number
-            </Label>
-            <div className="relative mt-1.5">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="0700000000"
-                value={form.phone}
-                onChange={(e) => update("phone", e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="password" className="text-foreground">
-              Password
-            </Label>
-            <div className="relative mt-1.5">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type={showPw ? "text" : "password"}
-                placeholder="Min. 6 characters"
-                value={form.password}
-                onChange={(e) => update("password", e.target.value)}
-                required
-                className="pl-10 pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPw ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="confirmPassword" className="text-foreground">
-              Confirm Password
-            </Label>
-            <div className="relative mt-1.5">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Repeat password"
-                value={form.confirmPassword}
-                onChange={(e) => update("confirmPassword", e.target.value)}
-                required
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-ig-green hover:bg-ig-green/90 text-white font-semibold"
-          >
-            {loading ? "Creating Account..." : "Create Account"}
-          </Button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-muted-foreground">OR</span>
-          </div>
-        </div>
-
-        <GoogleLoginButton
-          onCredentialResponse={handleGoogleCredential}
-          text="signup_with"
-        />
-
+        )}
+        {!verified && (
+          <GoogleLoginButton
+            onCredentialResponse={handleGoogleCredential}
+            text="signup_with"
+          />
+        )}
         <p className="text-sm text-center text-muted-foreground mt-6">
-          Already have an account?{" "}
-          <Link
-            href="/auth/login"
-            className="text-ig-green font-medium hover:underline"
-          >
-            Sign In
-          </Link>
+          {verified ? (
+            <Link
+              href="/auth/login"
+              className="text-ig-green font-medium hover:underline"
+            >
+              Go to Login
+            </Link>
+          ) : (
+            <>
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="text-ig-green font-medium hover:underline"
+              >
+                Sign In
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </div>

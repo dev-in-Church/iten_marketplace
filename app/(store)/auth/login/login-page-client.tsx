@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { GoogleLoginButton } from "@/components/google-login-button";
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,23 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showResendOption, setShowResendOption] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowResendOption(false);
     setLoading(true);
     try {
       await login("/api/auth/customer/login", { email, password });
       router.push(redirect);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const errorMsg = err instanceof Error ? err.message : "Login failed";
+      // Check if error is email not verified
+      if (errorMsg.includes("Please verify your email")) {
+        setShowResendOption(true);
+      }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -55,7 +62,7 @@ export default function LoginPage() {
       <Link href="/" className="mb-8">
         <Image
           src="/images/logo.png"
-          alt="RunnerMKT"
+          alt="ItenGear"
           width={160}
           height={56}
           className="h-14 w-auto"
@@ -67,12 +74,30 @@ export default function LoginPage() {
           Welcome Back
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-6">
-          Sign in to your RunnerMKT account
+          Sign in to your ItenGear account
         </p>
 
         {error && (
           <div className="bg-ig-red-light text-ig-red text-sm p-3 rounded-lg mb-4">
             {error}
+            {showResendOption && (
+              <div className="mt-2 pt-2 border-t border-ig-red/20">
+                <p className="text-xs mb-2">Didn&apos;t receive the email?</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // User would need to be logged in or use email to request resend
+                    // For now, redirect to verify-email page
+                    router.push("/auth/verify-email");
+                  }}
+                  className="text-xs h-7"
+                >
+                  Resend Verification Email
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -94,7 +119,6 @@ export default function LoginPage() {
               />
             </div>
           </div>
-
           <div>
             <Label htmlFor="password" className="text-foreground">
               Password
