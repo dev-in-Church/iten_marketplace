@@ -278,7 +278,7 @@ export default function ProductDetailPage() {
                 </Link>
               </p>
             )}
-            Music
+
             {product.brand && (
               <p className="text-sm">
                 <span className="text-muted-foreground">Brand: </span>
