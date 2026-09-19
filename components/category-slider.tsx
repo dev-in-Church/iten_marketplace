@@ -24,6 +24,13 @@ const CATEGORY_SLIDERS: SectionSliderConfig[] = [
     emptyMessage: "No supplement products available at the moment.",
   },
   {
+    title: "Craft & Curio",
+    headerClassName: "bg-red-600 text-white",
+    seeAllHref: "/products?category=curio",
+    queryParams: { category: "curio" },
+    emptyMessage: "No Curio products available at the moment.",
+  },
+  {
     title: "Biking Gear",
     headerClassName: "bg-amber-600 text-white",
     seeAllHref: "/products?category=biking",

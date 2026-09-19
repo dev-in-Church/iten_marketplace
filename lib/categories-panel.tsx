@@ -11,6 +11,8 @@ import {
   Trophy,
   Watch,
   Waves,
+  Gem,
+  Archive,
 } from "lucide-react";
 import { ReactElement } from "react";
 
@@ -42,9 +44,9 @@ export const MOCK_CATEGORIES: Category[] = [
   },
   {
     id: "3",
-    name: "Accessories",
-    slug: "accessories",
-    icon: <Dribbble />,
+    name: "Curio",
+    slug: "curio",
+    icon: <Gem />,
     description: "Basketball shoes, jerseys and equipment",
     image_url: "/images/categories/accessories.jpg",
   },
