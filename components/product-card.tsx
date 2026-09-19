@@ -2,93 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ShoppingCart, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/lib/cart-context";
+import { RatingStars } from "@/components/product/rating-stars";
+import { ProductBadges } from "@/components/product/product-badges";
+import { VendorRow } from "@/components/product/vendor-row";
+import { AddToCartButton } from "@/components/product/add-to-cart-button";
+import { formatPrice, getDiscountPercent, type Product } from "@/lib/products";
 
-// Types
-export type Product = {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  compare_price: number | null;
-  thumbnail: string | null;
-  currency: string;
-  vendor_name: string | null;
-  vendor_verified: boolean;
-  rating: number;
-  total_reviews: number;
-  is_featured: boolean;
-  category_slug?: string;
-  brand?: string | null;
-  total_sold?: number;
-};
+export type { Product };
 
-// Helper functions
-function formatPrice(price: number, currency: string = "USD") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency,
-  }).format(price);
-}
-
-function getDiscountPercent(price: number, comparePrice: number | null) {
-  if (!comparePrice || comparePrice <= price) return null;
-  const discount = ((comparePrice - price) / comparePrice) * 100;
-  return Math.round(discount);
-}
-
-// Product Card Component
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
   const discount = getDiscountPercent(product.price, product.compare_price);
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      comparePrice: product.compare_price,
-      thumbnail: product.thumbnail,
-      currency: product.currency,
-      vendorName: product.vendor_name,
-    });
-  };
 
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
-      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[420px] flex flex-col">
+      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
         {/* Image */}
-        <div className="relative w-full h-[220px] bg-secondary overflow-hidden shrink-0">
+        <div className="relative h-40 w-full overflow-hidden">
           {product.thumbnail ? (
-            <Image
+            <img
               src={product.thumbnail}
               alt={product.name}
-              fill
-              className="object-contain object-center group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="h-full w-full object-contain bg-gray-100 transition-transform duration-500 hover:scale-105"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
               No Image
             </div>
           )}
-
-          {discount && (
-            <span className="absolute top-2 left-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
-              -{discount}%
-            </span>
-          )}
-
-          {product.is_featured && (
-            <span className="absolute top-2 right-2 bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded">
-              FEATURED
-            </span>
-          )}
+          <ProductBadges discount={discount} featured={product.is_featured} />
         </div>
 
         {/* Content */}
@@ -96,15 +38,10 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Vendor */}
           <div className="h-5 mb-1">
             {product.vendor_name && (
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground truncate">
-                  {product.vendor_name}
-                </span>
-
-                {product.vendor_verified && (
-                  <Check className="h-3.5 w-3.5 bg-ig-green text-white rounded-full shrink-0" />
-                )}
-              </div>
+              <VendorRow
+                name={product.vendor_name}
+                verified={product.vendor_verified}
+              />
             )}
           </div>
 
@@ -114,78 +51,79 @@ export function ProductCard({ product }: { product: Product }) {
           </h3>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 h-5 mt-2">
-            <div className="flex items-center">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-3 w-3 ${
-                    i < Math.floor(product.rating)
-                      ? "text-amber-400 fill-amber-400"
-                      : "text-muted-foreground/30"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <span className="text-[10px] text-muted-foreground">
-              ({product.total_reviews})
-            </span>
+          <div className="h-5 mt-2">
+            <RatingStars
+              rating={product.rating}
+              totalReviews={product.total_reviews}
+            />
           </div>
 
           {/* Price */}
-          <div className="flex flex-col md:flex-row items-baseline gap-2 min-h-[28px] mt-2">
-            <span className="text-base font-bold text-ig-black">
-              {formatPrice(product.price, product.currency)}
-            </span>
-
+          <div className="flex items-center gap-1">
+            <p className="text-gray-600 text-sm font-bold">
+              {formatPrice(product.price)}
+            </p>
             {product.compare_price && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.compare_price, product.currency)}
-              </span>
+              <p className="text-xs text-gray-400 line-through">
+                {formatPrice(product.compare_price)}
+              </p>
             )}
           </div>
 
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Button */}
-          <Button
-            size="sm"
-            className="w-full bg-ig-green hover:bg-ig-green/90 text-white gap-1.5 mt-3"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            Add to Cart
-          </Button>
+          <AddToCartButton product={product} className="mt-3" />
         </div>
       </div>
     </Link>
   );
 }
 
-// Loading Skeleton Component with Logo
+/**
+ * Mirrors ProductCard's exact box model (h-[420px] card, h-[220px] image,
+ * h-5 / min-h-[40px] / h-5 / min-h-[28px] content rows) so swapping from
+ * skeleton to real data never shifts layout or "pops" — a real card and
+ * its skeleton should always occupy identical space.
+ */
 export function ProductCardSkeleton() {
   return (
-    <div className="bg-white border border-border rounded-lg overflow-hidden animate-pulse">
-      <div className="relative aspect-square bg-muted flex items-center justify-center">
-        {/* Logo in the image position */}
+    <div
+      className="bg-white border border-border rounded-sm overflow-hidden animate-pulse h-[420px] flex flex-col"
+      aria-hidden
+    >
+      <div className="relative w-full h-[220px] bg-muted flex items-center justify-center shrink-0">
         <div className="w-16 h-16 relative">
           <Image
             src="/images/logo.png"
-            alt="Loading"
+            alt=""
             fill
             className="object-contain opacity-30 grayscale-100"
           />
         </div>
       </div>
-      <div className="p-3 space-y-2">
-        <div className="h-3 bg-muted rounded w-16" />
-        <div className="h-4 bg-muted rounded w-full" />
-        <div className="h-4 bg-muted rounded w-3/4" />
-        <div className="h-3 bg-muted rounded w-20" />
-        <div className="h-5 bg-muted rounded w-24" />
-        <div className="h-8 bg-muted rounded w-full" />
+
+      <div className="p-3 flex flex-col flex-1 min-h-0">
+        <div className="h-5 mb-1">
+          <div className="h-3 bg-muted rounded w-16" />
+        </div>
+
+        <div className="min-h-[40px] space-y-1.5">
+          <div className="h-3.5 bg-muted rounded w-full" />
+          <div className="h-3.5 bg-muted rounded w-3/4" />
+        </div>
+
+        <div className="h-5 mt-2 flex items-center">
+          <div className="h-3 bg-muted rounded w-20" />
+        </div>
+
+        <div className="min-h-[28px] mt-2 flex items-center">
+          <div className="h-5 bg-muted rounded w-24" />
+        </div>
+
+        <div className="flex-1" />
+
+        <div className="h-8 bg-muted rounded w-full mt-3" />
       </div>
     </div>
   );

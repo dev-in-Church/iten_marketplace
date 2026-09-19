@@ -80,8 +80,9 @@ export function StoreHeader() {
           <p>Free delivery Within Iten (Home of Champions)</p>
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="https://vendorcenter.sporttechies.com/"
+              href="https://vendor.runnermkt.com/"
               className="hover:text-ig-green transition-colors"
+              target="_blank"
             >
               Sell on RunnerMKT
             </Link>
@@ -91,7 +92,7 @@ export function StoreHeader() {
 
       {/* Main header */}
       <div className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-3 bg-amber-400">
+        <div className="max-w-7xl mx-auto px-4 py-2 bg-amber-400">
           <div className="flex items-center justify-between">
             {/* Mobile menu toggle */}
             <button
@@ -124,7 +125,7 @@ export function StoreHeader() {
                   placeholder="Search products, brands and categories"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-none focus-visible:ring-0 shadow-none focus-visible:ring-offset-0 placeholder:text-gray-500 text-gray-800 h-10 pl-2 pr-24"
+                  className="w-full bg-transparent border-none focus-visible:ring-0 shadow-none focus-visible:ring-offset-0 placeholder:text-gray-500 text-gray-800 h-8 pl-2 pr-24"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && searchQuery.trim()) {
                       window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
@@ -153,7 +154,7 @@ export function StoreHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`gap-1.5 text-foreground font-medium select-none hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors ${accountMenuOpen ? "bg-[#EEEEEE]" : ""}`}
+                  className={`gap-1.5 text-foreground font-medium select-none h-9 px-3 rounded-md transition-colors ${accountMenuOpen ? "bg-[#EEEEEE]" : ""}`}
                   onClick={() => {
                     setAccountMenuOpen(!accountMenuOpen);
                     setHelpMenuOpen(false);
@@ -235,7 +236,7 @@ export function StoreHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`gap-1.5 text-foreground font-medium select-none hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors ${helpMenuOpen ? "bg-[#EEEEEE]" : ""}`}
+                  className={`gap-1.5 text-foreground font-medium select-none h-9 px-3 rounded-md transition-colors ${helpMenuOpen ? "bg-[#EEEEEE]" : ""}`}
                   onClick={() => {
                     setHelpMenuOpen(!helpMenuOpen);
                     setAccountMenuOpen(false);
@@ -328,7 +329,7 @@ export function StoreHeader() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="relative gap-1.5 text-foreground font-medium hover:bg-[#EEEEEE] h-9 px-3 rounded-md transition-colors"
+                  className="relative gap-1.5 text-foreground font-medium h-9 px-3 rounded-md transition-colors"
                 >
                   <ShoppingCart className="h-5 w-5 stroke-[2]" />
                   <span className="hidden md:inline text-[15px]">Cart</span>
@@ -386,7 +387,7 @@ export function StoreHeader() {
                 <li key={cat.slug}>
                   <Link
                     href={`/products?category=${cat.slug}`}
-                    className="block px-3 py-1.5 text-sm font-medium rounded-sm bg-ig-green-light text-ig-green hover:bg-white/10 transition-colors whitespace-nowrap"
+                    className="block px-3 py-1.5 text-sm font-medium rounded-sm hover:bg-ig-green-light text-ig-green transition-colors whitespace-nowrap"
                   >
                     {cat.name}
                   </Link>

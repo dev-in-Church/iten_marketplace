@@ -234,10 +234,10 @@ export const FEATURED_BRANDS: Brand[] = [
     logo: "/images/brands/brooks.svg",
   },
   {
-    id: "air-jordan",
-    name: "Air Jordan",
-    slug: "air-jordan",
-    logo: "/images/brands/jordan.svg",
+    id: "kiprun",
+    name: "Kiprun",
+    slug: "kiprun",
+    logo: "/images/brands/kiprun.png",
   },
   {
     id: "fila",

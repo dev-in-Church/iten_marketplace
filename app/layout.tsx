@@ -3,12 +3,22 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-import { Outfit } from "next/font/google";
+import { Roboto } from "next/font/google";
 
-const outfit = Outfit({
+const roboto = Roboto({
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
   variable: "--font-sans",
+  fallback: [
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Helvetica Neue",
+    "Arial",
+    "sans-serif",
+  ],
 });
+
 export const metadata: Metadata = {
   title: "RunnerMKT - Sports Equipment Marketplace",
   description:
@@ -50,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={outfit.variable}>
+    <html lang="en" className={roboto.variable}>
       {" "}
       <body className="font-sans pt-34 antialiased bg-background text-foreground overflow-x-hidden max-w-full">
         {children}

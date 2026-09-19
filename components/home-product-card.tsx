@@ -2,181 +2,95 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, ShoppingCart, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/lib/cart-context";
+import { ShoppingCart } from "lucide-react";
+import { ProductBadges } from "@/components/product/product-badges";
+import { useAddToCart } from "@/hooks/use-add-to-cart";
+import { formatPrice, getDiscountPercent, type Product } from "@/lib/products";
 
-// Types
-export type Product = {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  compare_price: number | null;
-  thumbnail: string | null;
-  currency: string;
-  vendor_name: string | null;
-  vendorName: string | null;
-  vendor_verified: boolean;
-  rating: number;
-  total_reviews: number;
-  is_featured: boolean;
-  category_slug?: string;
-  brand?: string | null;
-  total_sold?: number;
-};
+export type { Product };
 
-// Helper functions
-function formatPrice(price: number, currency: string = "USD") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency,
-  }).format(price);
-}
-
-function getDiscountPercent(price: number, comparePrice: number | null) {
-  if (!comparePrice || comparePrice <= price) return null;
-  const discount = ((comparePrice - price) / comparePrice) * 100;
-  return Math.round(discount);
-}
-
-// Product Card Component
+/**
+ * Lightweight card used on the homepage sliders. Deliberately shows less
+ * than the full ProductCard — just image, name, price, and the discount,
+ * plus a small floating add-to-cart button — so browsing stays fast and
+ * scannable; vendor/rating live on the full product page and the listing
+ * page's ProductCard instead.
+ */
 export function HomeProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
   const discount = getDiscountPercent(product.price, product.compare_price);
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      comparePrice: product.compare_price,
-      thumbnail: product.thumbnail,
-      currency: product.currency,
-      vendorName: product.vendor_name,
-    });
-  };
+  const handleAddToCart = useAddToCart(product);
 
   return (
-    <Link href={`/products/${product.slug}`} className="group">
-      <div className="bg-white border border-border rounded-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-        {/* Image */}
-        <div className="relative aspect-square bg-secondary overflow-hidden">
-          {product.thumbnail ? (
-            <Image
-              src={product.thumbnail}
-              alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-              No Image
-            </div>
-          )}
-          {discount && (
-            <span className="absolute top-2 left-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
-              {`-${discount}%`}
-            </span>
-          )}
-          {product.is_featured && (
-            <span className="absolute top-2 right-2 bg-black text-white text-[10px] font-bold px-2 py-0.5 rounded">
-              FEATURED
-            </span>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="p-3 flex flex-col flex-1">
-          {/* Vendor */}
-          {product.vendor_name && (
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-[11px] text-muted-foreground truncate">
-                {product.vendor_name}
-              </span>
-              {product.vendor_verified && (
-                <Check className="h-3.5 w-3.5 bg-ig-green text-white rounded-full shrink-0" />
-              )}
-            </div>
-          )}
-
-          {/* Name */}
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-ig-green transition-colors mb-1.5 flex-1">
-            {product.name}
-          </h3>
-
-          {/* Rating */}
-          <div className="flex items-center gap-1 mb-2">
-            <div className="flex items-center">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-3 w-3 ${
-                    i < Math.floor(product.rating)
-                      ? "text-amber-400 fill-amber-400"
-                      : "text-muted-foreground/30"
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] text-muted-foreground">
-              ({product.total_reviews})
-            </span>
+    <Link href={`/products/${product.slug}`} className="block">
+      {/* Image */}
+      <div className="relative h-40 w-full overflow-hidden">
+        {product.thumbnail ? (
+          <img
+            src={product.thumbnail}
+            alt={product.name}
+            className="h-full w-full object-contain bg-gray-100 transition-transform duration-500 hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+            No Image
           </div>
+        )}
+        <ProductBadges discount={discount} featured={false} />
 
-          {/* Price */}
-          <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-base font-bold text-ig-black">
-              {formatPrice(product.price, product.currency)}
-            </span>
-            {product.compare_price && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.compare_price, product.currency)}
-              </span>
-            )}
-          </div>
+        <button
+          onClick={handleAddToCart}
+          aria-label={`Add ${product.name} to cart`}
+          className="absolute bottom-2 right-2 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-md border border-border text-ig-green transition-all duration-200 hover:bg-ig-green hover:text-white hover:scale-110 active:scale-95"
+        >
+          <ShoppingCart className="h-4 w-4" />
+        </button>
+      </div>
 
-          {/* Add to cart */}
-          <Button
-            size="sm"
-            className="w-full bg-ig-green hover:bg-ig-green/90 text-white gap-1.5"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            Add to Cart
-          </Button>
+      {/* Content: name + price only */}
+      <div className="p-3">
+        <h3 className="truncate text-sm font-medium text-gray-800 mb-1">
+          {product.name}
+        </h3>
+
+        <div className="flex items-center justify-start gap-1">
+          <p className="text-gray-600 text-sm sm:text-md font-bold">
+            {formatPrice(product.price)}
+          </p>
+          {product.compare_price && (
+            <p className="text-xs text-gray-400 line-through">
+              {formatPrice(product.compare_price)}
+            </p>
+          )}
         </div>
       </div>
     </Link>
   );
 }
 
-// Loading Skeleton Component with Logo
 export function HomeProductCardSkeleton() {
   return (
-    <div className="bg-white border border-border rounded-lg overflow-hidden animate-pulse">
+    <div
+      className="bg-white border border-border rounded-sm overflow-hidden animate-pulse h-full flex flex-col"
+      aria-hidden
+    >
       <div className="relative aspect-square bg-muted flex items-center justify-center">
-        {/* Logo in the image position */}
         <div className="w-16 h-16 relative">
           <Image
             src="/images/logo.png"
-            alt="Loading"
+            alt=""
             fill
             className="object-contain opacity-30 grayscale-100"
           />
         </div>
+        <div className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white/70 border border-border" />
       </div>
-      <div className="p-3 space-y-2">
-        <div className="h-3 bg-muted rounded w-16" />
-        <div className="h-4 bg-muted rounded w-full" />
-        <div className="h-4 bg-muted rounded w-3/4" />
-        <div className="h-3 bg-muted rounded w-20" />
-        <div className="h-5 bg-muted rounded w-24" />
-        <div className="h-8 bg-muted rounded w-full" />
+      <div className="p-3 flex flex-col gap-1.5 flex-1">
+        <div className="min-h-[40px] space-y-1.5">
+          <div className="h-3.5 bg-muted rounded w-full" />
+          <div className="h-3.5 bg-muted rounded w-3/4" />
+        </div>
+        <div className="mt-auto h-5 bg-muted rounded w-24" />
       </div>
     </div>
   );
