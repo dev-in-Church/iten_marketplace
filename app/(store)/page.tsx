@@ -4,6 +4,7 @@ import { HeroSlider } from "@/components/hero-slider";
 import { StoreSEOText } from "@/components/store-seo-text";
 import { BrandSliders } from "@/components/brand-slider";
 import { CategorySliders } from "@/components/category-slider";
+import { VendorSliders } from "@/components/vendor-slider";
 import { MOCK_CATEGORIES } from "@/lib/categories-panel";
 import { FEATURED_BRANDS } from "@/lib/delivery-data";
 
@@ -79,6 +80,10 @@ export default function HomePage() {
           category added to the CATEGORY_SLIDERS config in
           category-slider.tsx. */}
       <CategorySliders />
+
+      {/* Vendor Hubs — Official Stores and any future vendor added to the
+          VENDOR_SLIDERS config in vendor-slider.tsx. */}
+      <VendorSliders />
 
       <StoreSEOText />
     </div>
