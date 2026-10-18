@@ -7,6 +7,7 @@ import { ProductBadges } from "@/components/product/product-badges";
 import { VendorRow } from "@/components/product/vendor-row";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { formatPrice, getDiscountPercent, type Product } from "@/lib/products";
+import { useInternationalRequest } from "@/lib/international-request-context";
 
 export type { Product };
 

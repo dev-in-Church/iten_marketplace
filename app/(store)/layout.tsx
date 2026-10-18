@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
+import { InternationalRequestProvider } from "@/lib/international-request-context";
 import { StoreHeader } from "@/components/store-header";
 import { StoreFooter } from "@/components/store-footer";
 import { CookieConsent } from "@/components/cookie-consent";
@@ -15,13 +16,15 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <CartProvider>
-        <div className="min-h-screen flex flex-col bg-background">
-          <StoreHeader />
-          <main className="flex-1">{children}</main>
-          <StoreFooter />
-          <CookieConsent onDismiss={() => setCookieDismissed(true)} />
-          <SellOnRunnerMKT canShow={cookieDismissed} />
-        </div>
+        <InternationalRequestProvider>
+          <div className="min-h-screen flex flex-col bg-background">
+            <StoreHeader />
+            <main className="flex-1">{children}</main>
+            <StoreFooter />
+            <CookieConsent onDismiss={() => setCookieDismissed(true)} />
+            <SellOnRunnerMKT canShow={cookieDismissed} />
+          </div>
+        </InternationalRequestProvider>
       </CartProvider>
     </AuthProvider>
   );

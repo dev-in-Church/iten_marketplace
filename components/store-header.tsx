@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
+import { useInternationalRequest } from "@/lib/international-request-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,6 +36,7 @@ const CATEGORIES = [
 export function StoreHeader() {
   const { user, logout } = useAuth();
   const { count } = useCart();
+  const { count: requestCount } = useInternationalRequest();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
@@ -323,6 +325,23 @@ export function StoreHeader() {
                   </div>
                 )}
               </div>
+
+              {/* International product requests */}
+              <Link href="/orders/international">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 relative text-foreground"
+                >
+                  <Package className="h-5 w-5" />
+                  <span className="hidden md:inline text-sm">Requests</span>
+                  {requestCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-ig-green text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {requestCount > 99 ? "99+" : requestCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
 
               {/* 3. Cart */}
               <Link href="/cart">

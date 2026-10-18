@@ -12,16 +12,20 @@ export function AddToCartButton({
   product: Product;
   className?: string;
 }) {
-  const handleAddToCart = useAddToCart(product);
+  const { handleProductAction, isInternational } = useAddToCart(product);
 
   return (
     <Button
       size="sm"
-      className={`w-full bg-ig-green hover:bg-ig-green/90 text-white gap-1.5 ${className}`}
-      onClick={handleAddToCart}
+      className={`w-full text-white gap-1.5 ${
+        isInternational
+          ? "bg-slate-700 hover:bg-slate-800"
+          : "bg-ig-green hover:bg-ig-green/90"
+      } ${className}`}
+      onClick={handleProductAction}
     >
       <ShoppingCart className="h-3.5 w-3.5" />
-      Add to Cart
+      {isInternational ? "Add to Request" : "Add to Cart"}
     </Button>
   );
 }

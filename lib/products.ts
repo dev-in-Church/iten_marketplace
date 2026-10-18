@@ -6,9 +6,10 @@ export type Product = {
   compare_price: number | null;
   thumbnail: string | null;
   currency: string;
-  vendor_name: string | null;
+  vendor_name: string;
   vendorName: string | null;
   vendor_verified: boolean;
+  vendor_type?: "local" | "international";
   rating: number;
   total_reviews: number;
   is_featured: boolean;

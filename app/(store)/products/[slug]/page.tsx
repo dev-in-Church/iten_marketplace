@@ -11,6 +11,7 @@ import {
   type Product,
 } from "@/lib/mock-data";
 import { useCart } from "@/lib/cart-context";
+import { useInternationalRequest } from "@/lib/international-request-context";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import {
@@ -28,6 +29,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { addToCart } = useCart();
+  const { addItem } = useInternationalRequest();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -52,6 +54,23 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (product.vendor_type === "international") {
+      addItem(
+        {
+          productId: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: product.price,
+          thumbnail: product.thumbnail,
+          currency: product.currency,
+          vendorName: product.vendor_name || "",
+        },
+        quantity,
+      );
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+      return;
+    }
     addToCart({
       id: product.id,
       name: product.name,
@@ -249,7 +268,11 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
             >
               <ShoppingCart className="h-5 w-5" />
-              {added ? "Added!" : "Add to Cart"}
+              {added
+                ? "Added!"
+                : product.vendor_type === "international"
+                  ? "Add to Request"
+                  : "Add to Cart"}
             </Button>
           </div>
 
