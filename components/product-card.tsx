@@ -13,6 +13,8 @@ export type { Product };
 
 export function ProductCard({ product }: { product: Product }) {
   const discount = getDiscountPercent(product.price, product.compare_price);
+  const isInternational = product.vendor_type === "international";
+  const displayCurrency = isInternational ? "USD" : product.currency || "KES";
 
   return (
     <Link href={`/products/${product.slug}`} className="group block h-full">
@@ -61,12 +63,12 @@ export function ProductCard({ product }: { product: Product }) {
 
           {/* Price */}
           <div className="flex items-center gap-1">
-            <p className="text-gray-600 text-sm font-bold">
-              {formatPrice(product.price)}
-            </p>
+            <span className="text-base font-bold text-ig-black">
+              {formatPrice(product.price, displayCurrency)}
+            </span>
             {product.compare_price && (
               <p className="text-xs text-gray-400 line-through">
-                {formatPrice(product.compare_price)}
+                {formatPrice(product.compare_price, displayCurrency)}
               </p>
             )}
           </div>

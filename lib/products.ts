@@ -18,13 +18,17 @@ export type Product = {
   total_sold?: number;
 };
 
-export const formatPrice = (
-  price: number | string | null | undefined,
-): string => {
-  const numericPrice = Number.parseFloat(String(price ?? 0));
-
-  return `KSh${numericPrice.toLocaleString("en-KE")}`;
-};
+export function formatPrice(
+  amount: number | string | null | undefined,
+  currency = "KES",
+): string {
+  const numericAmount = Number.parseFloat(String(amount ?? 0));
+  const normalizedCurrency =
+    String(currency || "KES").toUpperCase() === "USD" ? "USD" : "KES";
+  return normalizedCurrency === "USD"
+    ? `USD ${numericAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `KES ${numericAmount.toLocaleString("en-KE", { maximumFractionDigits: 2 })}`;
+}
 
 export function getDiscountPercent(price: number, comparePrice: number | null) {
   if (!comparePrice || comparePrice <= price) return null;

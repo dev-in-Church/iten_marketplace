@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -36,12 +37,40 @@ const RequestContext = createContext<RequestContextValue | undefined>(
   undefined,
 );
 
+const REQUEST_STORAGE_KEY = "itengear-international-request-list";
+
 export function InternationalRequestProvider({
   children,
 }: {
   children: ReactNode;
 }) {
   const [items, setItems] = useState<InternationalRequestItem[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(REQUEST_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as InternationalRequestItem[];
+        if (Array.isArray(parsed))
+          setItems(
+            parsed.filter((item) => item?.productId && item.quantity > 0),
+          );
+      }
+    } catch {
+      window.localStorage.removeItem(REQUEST_STORAGE_KEY);
+    } finally {
+      setHasHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    if (items.length)
+      window.localStorage.setItem(REQUEST_STORAGE_KEY, JSON.stringify(items));
+    else window.localStorage.removeItem(REQUEST_STORAGE_KEY);
+  }, [items, hasHydrated]);
+
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items],
@@ -65,7 +94,7 @@ export function InternationalRequestProvider({
             ? { ...entry, quantity: entry.quantity + quantity }
             : entry,
         );
-      return [...current, { ...item, quantity }];
+      return [...current, { ...item, currency: "USD", quantity }];
     });
   };
 
@@ -74,6 +103,7 @@ export function InternationalRequestProvider({
       value={{
         items,
         subtotal,
+        count,
         addItem,
         updateQuantity: (productId, quantity) =>
           setItems((current) =>

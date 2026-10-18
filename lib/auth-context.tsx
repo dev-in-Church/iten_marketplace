@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import api from "@/lib/api";
 
 interface User {
@@ -17,6 +24,8 @@ interface VendorProfile {
   id: string;
   store_name: string;
   store_description?: string;
+  country?: string;
+  vendor_type?: "local" | "international";
   is_verified: boolean;
   commission_rate: number;
   total_sales: number;
@@ -43,7 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const data = await api.get<{ user: User; vendor: VendorProfile | null }>("/api/auth/me");
+      const data = await api.get<{ user: User; vendor: VendorProfile | null }>(
+        "/api/auth/me",
+      );
       setUser(data.user);
       setVendor(data.vendor);
     } catch {
@@ -59,7 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser]);
 
   const login = async (endpoint: string, data: Record<string, string>) => {
-    const res = await api.post<{ user: User; vendor?: VendorProfile }>(endpoint, data);
+    const res = await api.post<{ user: User; vendor?: VendorProfile }>(
+      endpoint,
+      data,
+    );
     setUser(res.user);
     if (res.vendor) setVendor(res.vendor);
   };
@@ -70,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const googleLogin = async (credential: string, role?: string) => {
-    const res = await api.post<{ user: User }>("/api/auth/google", { credential, role });
+    const res = await api.post<{ user: User }>("/api/auth/google", {
+      credential,
+      role,
+    });
     setUser(res.user);
   };
 
@@ -85,7 +102,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, vendor, loading, login, register, googleLogin, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        vendor,
+        loading,
+        login,
+        register,
+        googleLogin,
+        logout,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
