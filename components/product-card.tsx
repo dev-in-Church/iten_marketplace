@@ -39,11 +39,19 @@ export function ProductCard({ product }: { product: Product }) {
         {/* Content */}
         <div className="p-3 flex flex-col flex-1 min-h-0">
           {/* Vendor */}
-          <div className="h-5 mb-1">
+          <div className="h-5 mb-1 flex">
             {product.vendor_name && (
               <VendorRow
                 name={product.vendor_name}
                 verified={product.vendor_verified}
+              />
+            )}
+            {product.vendor_name === "Official Stores" && (
+              <img
+                src="/images/icon.png"
+                alt="lg"
+                className="h-full w-full object-contain"
+                loading="lazy"
               />
             )}
           </div>
@@ -63,7 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
 
           {/* Price */}
           <div className="flex items-center gap-1">
-            <span className="text-base font-bold text-ig-black">
+            <span className="text-sm font-bold text-ig-black">
               {formatPrice(product.price, displayCurrency)}
             </span>
             {product.compare_price && (

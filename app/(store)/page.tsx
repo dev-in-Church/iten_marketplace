@@ -79,7 +79,7 @@ export default function HomePage() {
       {/* Category Hubs — Supplements, Biking, Football, and any future
           category added to the CATEGORY_SLIDERS config in
           category-slider.tsx. */}
-      <CategorySliders />
+      {/* <CategorySliders /> */}
 
       {/* Vendor Hubs — Official Stores and any future vendor added to the
           VENDOR_SLIDERS config in vendor-slider.tsx. */}

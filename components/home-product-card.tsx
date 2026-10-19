@@ -21,14 +21,14 @@ export function HomeProductCard({ product }: { product: Product }) {
   const handleAddToCart = useAddToCart(product);
 
   return (
-    <Link href={`/products/${product.slug}`} className="block">
+    <Link href={`/products/${product.slug}`} className="block bg-white">
       {/* Image */}
       <div className="relative h-40 w-full overflow-hidden">
         {product.thumbnail ? (
           <img
             src={product.thumbnail}
             alt={product.name}
-            className="h-full w-full object-contain bg-gray-100 transition-transform duration-500 hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
             loading="lazy"
           />
         ) : (

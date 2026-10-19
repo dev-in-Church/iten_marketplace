@@ -17,6 +17,7 @@ type BrandSliderConfig = {
   label: string;
   title: string;
   headerClassName: string;
+  bgColor?: string;
   seeAllClassName?: string;
   /** Render immediately instead of waiting to scroll into view. */
   eager?: boolean;
@@ -30,27 +31,30 @@ const BRAND_SLIDERS: BrandSliderConfig[] = [
     brand: "adidas",
     label: "Adidas",
     title: "Best Of Adidas",
-    headerClassName: "bg-ig-black text-white",
+    headerClassName: "text-ig-black",
+    bgColor: "bg-gray-400",
     eager: true,
   },
   {
     brand: "nike",
     label: "Nike",
     title: "Official Nike Hub",
-    headerClassName: "bg-neutral-900 text-white",
+    headerClassName: "text-ig-green",
+    bgColor: "bg-ig-green-light",
     seeAllClassName: "",
   },
   {
     brand: "garmin",
     label: "Garmin",
     title: "Official Garmin Hub",
-    headerClassName: "bg-ig-black text-white",
+    headerClassName: "text-ig-black",
   },
   {
     brand: "asics",
     label: "Asics",
     title: "Official Asics Hub",
-    headerClassName: "bg-gradient-to-r from-blue-600 to-indigo-800 text-white",
+    headerClassName: "text-blue-600",
+    bgColor: "bg-blue-100",
   },
 ];
 
@@ -192,9 +196,11 @@ function Slider({ config }: { config: BrandSliderConfig }) {
 
   return (
     <section ref={sectionRef} className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-      <div className="relative shadow rounded-lg overflow-hidden">
+      <div
+        className={`relative shadow rounded-lg overflow-hidden ${config.bgColor}`}
+      >
         <div
-          className={`flex items-center justify-between mb-2 px-2 ${config.headerClassName}`}
+          className={`flex items-center justify-between mb-2 px-4 pt-2 ${config.headerClassName}`}
         >
           <h2 className="text-xl md:text-2xl font-bold">{config.title}</h2>
           <Link

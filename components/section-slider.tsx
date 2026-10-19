@@ -15,6 +15,7 @@ const PRODUCTS_PER_SLIDER = 9;
 export type SectionSliderConfig = {
   title: string;
   headerClassName: string;
+  bgColor?: string;
   seeAllHref: string;
   seeAllClassName?: string;
   /** Extra query params sent to /api/products, e.g. { brand: "adidas" } or { category: "football" }. */
@@ -158,9 +159,11 @@ export function SectionSlider({ config }: { config: SectionSliderConfig }) {
 
   return (
     <section ref={sectionRef} className="max-w-7xl mx-auto px-1 lg:px-4 py-2">
-      <div className="relative shadow rounded-lg overflow-hidden">
+      <div
+        className={`relative shadow rounded-lg overflow-hidden ${config.bgColor}`}
+      >
         <div
-          className={`flex items-center justify-between mb-2 px-2 ${config.headerClassName}`}
+          className={`flex items-center justify-between mb-2 px-4 pt-2 ${config.headerClassName}`}
         >
           <h2 className="text-xl md:text-2xl font-bold">{config.title}</h2>
           <Link
