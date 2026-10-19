@@ -18,6 +18,7 @@ import { useInternationalRequest } from "@/lib/international-request-context";
 import { useAuth } from "@/lib/auth-context";
 import api from "@/lib/api";
 import type { Product } from "@/lib/mock-data";
+import HeroSlider from "@/components/international/hero";
 
 const SHIPPING_THRESHOLD = 10000;
 
@@ -99,34 +100,7 @@ export default function InternationalMarketplacePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="bg-slate-950 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
-          <div className="max-w-3xl">
-            <div className="mb-5 flex items-center gap-2 text-sm font-medium text-emerald-300">
-              <Globe2 className="h-5 w-5" /> International sourcing
-            </div>
-            <h1 className="text-balance text-4xl font-bold tracking-tight md:text-6xl">
-              Source globally. Ship together.
-            </h1>
-            <p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-300">
-              Browse international products and submit any request size.
-              RunnerMKT combines pending requests so admin can authorize
-              consolidated shipping when the shared pool reaches $10,000.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-300">
-              <span className="rounded-full border border-slate-700 px-4 py-2">
-                Shared shipping threshold: $10,000
-              </span>
-              <span className="rounded-full border border-slate-700 px-4 py-2">
-                No minimum per client
-              </span>
-              <span className="rounded-full border border-slate-700 px-4 py-2">
-                Vendor quotation first
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSlider />
 
       <main className="mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="mb-8 flex items-end justify-between gap-4">
@@ -153,7 +127,7 @@ export default function InternationalMarketplacePage() {
             is approved.
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -237,7 +211,7 @@ export default function InternationalMarketplacePage() {
                           {item.vendorName}
                         </p>
                         <p className="mt-1 font-medium">
-                          USD {item.price.toLocaleString()}
+                          $ {item.price.toLocaleString()}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <Button
@@ -283,12 +257,12 @@ export default function InternationalMarketplacePage() {
                     Product subtotal
                   </span>
                   <span className="text-2xl font-bold">
-                    USD {subtotal.toLocaleString()}
+                    $ {subtotal.toLocaleString()}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   No minimum per client. Admin monitors the combined pending
-                  pool; shipping authorization starts at USD{" "}
+                  pool; shipping authorization starts at ${" "}
                   {SHIPPING_THRESHOLD.toLocaleString()}.
                 </p>
                 <div className="mt-4 h-2 rounded-full bg-muted">

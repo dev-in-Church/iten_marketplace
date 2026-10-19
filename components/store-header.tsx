@@ -23,14 +23,13 @@ import {
 } from "lucide-react";
 
 const CATEGORIES = [
-  { name: "Tees", slug: "running" },
-  { name: "Hats & Beanies", slug: "football" },
-  { name: "Water Bottles", slug: "basketball" },
-  { name: "Pants", slug: "tennis" },
-  { name: "Smart Watches", slug: "swimming" },
-  { name: "Gym & Fitness", slug: "gym-fitness" },
-  { name: "Hiking", slug: "cycling" },
-  { name: "Jackets", slug: "athletics" },
+  { name: "Curio Shop", slug: "curio" },
+  { name: "Supplements", slug: "supplements" },
+  // { name: "Pants", slug: "tennis" },
+  // { name: "Smart Watches", slug: "swimming" },
+  // { name: "Gym & Fitness", slug: "gym-fitness" },
+  // { name: "Hiking", slug: "cycling" },
+  // { name: "Jackets", slug: "athletics" },
 ];
 
 export function StoreHeader() {
@@ -402,6 +401,14 @@ export function StoreHeader() {
         <nav className="hidden md:block text-ig-green py-1">
           <div className="max-w-7xl mx-auto px-4">
             <ul className="flex items-center gap-3 overflow-x-auto">
+              <li>
+                <Link
+                  href="/international"
+                  className="block px-3 py-1.5 text-sm font-medium rounded-sm bg-ig-green-light text-ig-green transition-colors whitespace-nowrap"
+                >
+                  International Request
+                </Link>
+              </li>
               {CATEGORIES.map((cat) => (
                 <li key={cat.slug}>
                   <Link

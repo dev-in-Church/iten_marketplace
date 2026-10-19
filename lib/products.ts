@@ -26,7 +26,7 @@ export function formatPrice(
   const normalizedCurrency =
     String(currency || "KES").toUpperCase() === "USD" ? "USD" : "KES";
   return normalizedCurrency === "USD"
-    ? `USD ${numericAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    ? `$ ${numericAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : `KES ${numericAmount.toLocaleString("en-KE", { maximumFractionDigits: 2 })}`;
 }
 

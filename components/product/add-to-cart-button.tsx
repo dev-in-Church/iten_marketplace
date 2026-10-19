@@ -17,11 +17,7 @@ export function AddToCartButton({
   return (
     <Button
       size="sm"
-      className={`w-full text-white gap-1.5 ${
-        isInternational
-          ? "bg-slate-700 hover:bg-slate-800"
-          : "bg-ig-green hover:bg-ig-green/90"
-      } ${className}`}
+      className="w-full text-white gap-1.5 bg-ig-green hover:bg-ig-green/90"
       onClick={handleProductAction}
     >
       <ShoppingCart className="h-3.5 w-3.5" />

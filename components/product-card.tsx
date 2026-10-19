@@ -25,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
             <img
               src={product.thumbnail}
               alt={product.name}
-              className="h-full w-full object-contain bg-gray-100 transition-transform duration-500 hover:scale-105"
+              className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
               loading="lazy"
             />
           ) : (
